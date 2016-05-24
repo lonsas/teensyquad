@@ -17,6 +17,11 @@ const static uint8_t MOTORPIN = 23;
 volatile uint32_t radio_rise = 0;
 volatile uint32_t width[6];
 
+int16_t acc[3];
+int16_t gyro[3];
+int16_t mag[3];
+
+
 
 void radio_pw_rise_isr() {
     radio_rise = micros();
@@ -62,29 +67,45 @@ void setup_motor() {
     analogWriteResolution(12);
 }
 
-int16_t sensor_test() {
-    int16_t result;
+uint16_t read_16bit_register(uint8_t high) {
+    uint16_t result;
     Wire.beginTransmission(SENSOR_ADDRESS);
-    Wire.write(0x3b);
-    Wire.endTransmission();
-    Wire.requestFrom(SENSOR_ADDRESS, 1, I2C_NOSTOP);
+    Wire.write(high);
+    Wire.endTransmission(I2C_STOP);
+    Wire.requestFrom(SENSOR_ADDRESS, 1, I2C_STOP);
     result = (Wire.readByte() << 8);
-
+    
     Wire.beginTransmission(SENSOR_ADDRESS);
-    Wire.write(0x3c);
-    Wire.endTransmission();
-    Wire.requestFrom(SENSOR_ADDRESS, 1, I2C_NOSTOP);
+    Wire.write(high);
+    Wire.endTransmission(I2C_STOP);
+    Wire.requestFrom(SENSOR_ADDRESS, 1, I2C_STOP);
     result |= Wire.readByte();
     return result;
 }
 
+
+void sensor_test() {
+    acc[0] = read_16bit_register(0x3b);
+    acc[1] = read_16bit_register(0x3d);
+    acc[2] = read_16bit_register(0x3f);
+    
+    gyro[0] = read_16bit_register(0x43);
+    gyro[1] = read_16bit_register(0x45);
+    gyro[2] = read_16bit_register(0x47);
+}
+
 void setup_sensor() {
     delay(1000);
-    Wire.begin(I2C_MASTER,0x0, I2C_PINS_18_19, I2C_PULLUP_EXT, I2C_RATE_100);
+    Wire.begin(I2C_MASTER,0x0, I2C_PINS_18_19, I2C_PULLUP_EXT, I2C_RATE_400);
     Wire.beginTransmission(SENSOR_ADDRESS);
     Wire.write(0x6b);
     Wire.write(0);
     Wire.endTransmission(I2C_STOP);
+
+    /*Wire.beginTransmission(SENSOR_ADDRESS);
+    Wire.write(0x1c);
+    Wire.write(0b00001000);
+    Wire.endTransmission(I2C_STOP);*/
 }
 
 
@@ -100,25 +121,39 @@ extern "C" int main(void)
     uint32_t t_start = micros();
     uint16_t output;
 	while (1) {
+            sensor_test();
             i++;
             output = width[2]*1.6384;
             analogWrite(MOTORPIN, output);
+            /*
+            Serial.print("\tch1:");
             Serial.print(width[0]);
-            Serial.print(" ");
+            Serial.print("\tch2:");
             Serial.print(width[1]);
-            Serial.print(" ");
+            Serial.print("\tch3:");
             Serial.print(width[2]);
-            Serial.print(" ");
+            Serial.print("\tch4:");
             Serial.print(width[3]);
-            Serial.print(" ");
+            Serial.print("\tch5:");
             Serial.print(width[4]);
-            Serial.print(" ");
+            Serial.print("\tch6:");
             Serial.print(width[5]);
-            Serial.print(" ");
+            Serial.print("\tmotor:");
             Serial.print(output);
-            Serial.print(" ");
-            Serial.print(sensor_test());
-            Serial.print(" ");
+            */
+            Serial.print("ax: ");
+            Serial.print(acc[0]);
+            Serial.print("\tay: ");
+            Serial.print(acc[1]);
+            Serial.print("\taz: ");
+            Serial.print(acc[2]);
+            Serial.print("\tgx: ");
+            Serial.print(gyro[0]);
+            Serial.print("\tgy: ");
+            Serial.print(gyro[1]);
+            Serial.print("\tgz: ");
+            Serial.print(gyro[2]);
+            Serial.print("\tdt: ");
             Serial.print(micros() - t_start);
             Serial.println("");
             t_start = micros();
