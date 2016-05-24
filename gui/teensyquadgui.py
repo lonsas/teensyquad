@@ -6,37 +6,43 @@ from PyQt4 import QtCore
 import design
 import serial
 from serial.tools import list_ports
-from construct import Struct, UBInt8, SBInt16, UBInt32
+from construct import Struct, UBInt8, SBInt16, UBInt32, SLInt16, ULInt32
+from pyqtgraph.ptime import time
+
 
 sensorStruct = Struct("datastruct",
-                    SBInt16("accx"),
-                    SBInt16("accy"),
-                    SBInt16("accz"),
-                    SBInt16("gyrox"),
-                    SBInt16("gyroy"),
-                    SBInt16("gyroz"),
-                    UBInt32("dt"))
+                    SLInt16("accx"),
+                    SLInt16("accy"),
+                    SLInt16("accz"),
+                    SLInt16("gyrox"),
+                    SLInt16("gyroy"),
+                    SLInt16("gyroz"),
+                    ULInt32("dt"))
 
 
 class TeensyGUI(QtGui.QMainWindow, design.Ui_MainWindow):
     def __init__(self, parent=None):
         super(TeensyGUI, self).__init__(parent)
         self.setupUi(self)
+        self.measurementPlot.setYRange(-2**14, 2**14)
         self.accxCurve = self.measurementPlot.plot(pen=(0, 6))
-        self.accx = []
+        self.accx = [0]
         self.accyCurve = self.measurementPlot.plot(pen=(1, 6))
-        self.accy = []
+        self.accy = [0]
         self.acczCurve = self.measurementPlot.plot(pen=(2, 6))
-        self.accz = []
+        self.accz = [0]
         self.gyroxCurve = self.measurementPlot.plot(pen=(3, 6))
-        self.gyrox = []
+        self.gyrox = [0]
         self.gyroyCurve = self.measurementPlot.plot(pen=(4, 6))
-        self.gyroy = []
+        self.gyroy = [0]
         self.gyrozCurve = self.measurementPlot.plot(pen=(5, 6))
-        self.gyroz = []
+        self.gyroz = [0]
+        self.startTime = time()
+        self.plottime = [0]
+        self.dt = 0
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updatePlots)
-        self.timer.start(100)
+        self.timer.start(0)
 
 
 
@@ -47,24 +53,28 @@ class TeensyGUI(QtGui.QMainWindow, design.Ui_MainWindow):
 
     def initialize(self, dataserial):
         self.dataserial = dataserial
-        self.connect(dataserial, dataserial.signal, self.updateMeasurements)
+        self.connect(dataserial, dataserial.signal, self.updateData)
 
-    def updateMeasurements(self, data):
+    def updateData(self, data):
+        self.plottime.append(time() - self.startTime)
         self.accx.append(data.accx)
         self.accy.append(data.accy)
         self.accz.append(data.accz)
         self.gyrox.append(data.gyrox)
         self.gyroy.append(data.gyroy)
         self.gyroz.append(data.gyroz)
+        self.dt = data.dt
 
 
     def updatePlots(self):
-        self.accxCurve.setData(self.accx)
-        self.accyCurve.setData(self.accy)
-        self.acczCurve.setData(self.accz)
-        self.gyroxCurve.setData(self.gyrox)
-        self.gyroyCurve.setData(self.gyroy)
-        self.gyrozCurve.setData(self.gyroz)
+        self.accxCurve.setData(self.plottime, self.accx)
+        self.accyCurve.setData(self.plottime, self.accy)
+        self.acczCurve.setData(self.plottime, self.accz)
+        self.gyroxCurve.setData(self.plottime, self.gyrox)
+        self.gyroyCurve.setData(self.plottime, self.gyroy)
+        self.gyrozCurve.setData(self.plottime, self.gyroz)
+        self.sampleTimeLabel.setText(str(self.dt))
+        self.measurementPlot.setXRange(self.plottime[-1] - 10, self.plottime[-1])
 
 
 

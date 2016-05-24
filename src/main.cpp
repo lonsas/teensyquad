@@ -21,7 +21,11 @@ int16_t acc[3];
 int16_t gyro[3];
 int16_t mag[3];
 
-
+struct serialData {
+    int16_t acc[3];
+    int16_t gyro[3];
+    uint32_t dt;
+} serialData;
 
 void radio_pw_rise_isr() {
     radio_rise = micros();
@@ -76,7 +80,7 @@ uint16_t read_16bit_register(uint8_t high) {
     result = (Wire.readByte() << 8);
     
     Wire.beginTransmission(SENSOR_ADDRESS);
-    Wire.write(high);
+    Wire.write(high+1);
     Wire.endTransmission(I2C_STOP);
     Wire.requestFrom(SENSOR_ADDRESS, 1, I2C_STOP);
     result |= Wire.readByte();
@@ -125,7 +129,15 @@ extern "C" int main(void)
             i++;
             output = width[2]*1.6384;
             analogWrite(MOTORPIN, output);
-            /*
+            serialData.acc[0] = acc[0];
+            serialData.acc[1] = acc[1];
+            serialData.acc[2] = acc[2];
+            serialData.gyro[0] = gyro[0];
+            serialData.gyro[1] = gyro[1];
+            serialData.gyro[2] = gyro[2];
+            serialData.dt = micros() - t_start;
+            Serial.write((char *)&serialData, sizeof(serialData));
+/*
             Serial.print("\tch1:");
             Serial.print(width[0]);
             Serial.print("\tch2:");
@@ -140,9 +152,9 @@ extern "C" int main(void)
             Serial.print(width[5]);
             Serial.print("\tmotor:");
             Serial.print(output);
-            */
-            Serial.print("ax: ");
-            Serial.print(acc[0]);
+            
+            Serial.println("ax: ");
+            Serial.println(acc[0]);
             Serial.print("\tay: ");
             Serial.print(acc[1]);
             Serial.print("\taz: ");
@@ -156,8 +168,8 @@ extern "C" int main(void)
             Serial.print("\tdt: ");
             Serial.print(micros() - t_start);
             Serial.println("");
+            */
             t_start = micros();
-
             
     
     }
