@@ -50,6 +50,7 @@ THE SOFTWARE.
 // -----------------------------------------------------------------------------
 // I2C interface implementation setting
 // -----------------------------------------------------------------------------
+#define I2CDEV_IMPLEMENTATION I2C_T3
 #ifndef I2CDEV_IMPLEMENTATION
 #define I2CDEV_IMPLEMENTATION       I2CDEV_ARDUINO_WIRE
 //#define I2CDEV_IMPLEMENTATION       I2CDEV_BUILTIN_FASTWIRE
@@ -85,6 +86,11 @@ THE SOFTWARE.
     #if I2CDEV_IMPLEMENTATION == I2CDEV_I2CMASTER_LIBRARY
         #include <I2C.h>
     #endif
+    #if I2CDEV_IMPLEMENTATION == I2C_T3
+        #include <i2c_t3.h>
+        #define BUFFER_LENGTH 32
+    #endif
+
 #endif
 
 #ifdef SPARK
