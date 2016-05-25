@@ -24,6 +24,7 @@ int16_t mag[3];
 struct serialData {
     int16_t acc[3];
     int16_t gyro[3];
+    uint32_t t;
     uint32_t dt;
 } serialData;
 
@@ -76,13 +77,13 @@ uint16_t read_16bit_register(uint8_t high) {
     Wire.beginTransmission(SENSOR_ADDRESS);
     Wire.write(high);
     Wire.endTransmission(I2C_STOP);
-    Wire.requestFrom(SENSOR_ADDRESS, 1, I2C_STOP);
+    Wire.requestFrom(SENSOR_ADDRESS, 1, I2C_NOSTOP);
     result = (Wire.readByte() << 8);
     
     Wire.beginTransmission(SENSOR_ADDRESS);
     Wire.write(high+1);
     Wire.endTransmission(I2C_STOP);
-    Wire.requestFrom(SENSOR_ADDRESS, 1, I2C_STOP);
+    Wire.requestFrom(SENSOR_ADDRESS, 1, I2C_NOSTOP);
     result |= Wire.readByte();
     return result;
 }
@@ -135,7 +136,8 @@ extern "C" int main(void)
             serialData.gyro[0] = gyro[0];
             serialData.gyro[1] = gyro[1];
             serialData.gyro[2] = gyro[2];
-            serialData.dt = micros() - t_start;
+            serialData.t = micros();
+            serialData.dt = serialData.t - t_start;
             Serial.write((char *)&serialData, sizeof(serialData));
 /*
             Serial.print("\tch1:");

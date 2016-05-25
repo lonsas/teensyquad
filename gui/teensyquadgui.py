@@ -17,6 +17,7 @@ sensorStruct = Struct("datastruct",
                     SLInt16("gyrox"),
                     SLInt16("gyroy"),
                     SLInt16("gyroz"),
+                    ULInt32("t"),
                     ULInt32("dt"))
 
 
@@ -42,7 +43,7 @@ class TeensyGUI(QtGui.QMainWindow, design.Ui_MainWindow):
         self.dt = 0
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updatePlots)
-        self.timer.start(0)
+        self.timer.start(50)
 
 
 
@@ -56,25 +57,25 @@ class TeensyGUI(QtGui.QMainWindow, design.Ui_MainWindow):
         self.connect(dataserial, dataserial.signal, self.updateData)
 
     def updateData(self, data):
-        self.plottime.append(time() - self.startTime)
         self.accx.append(data.accx)
         self.accy.append(data.accy)
         self.accz.append(data.accz)
         self.gyrox.append(data.gyrox)
         self.gyroy.append(data.gyroy)
         self.gyroz.append(data.gyroz)
+        self.plottime.append(data.t/1000000)
         self.dt = data.dt
 
 
     def updatePlots(self):
-        self.accxCurve.setData(self.plottime, self.accx)
+        self.accxCurve.setData(self.plottime, self.accx,symbolBrush=(255,0,0), symbolPen='w')
         self.accyCurve.setData(self.plottime, self.accy)
         self.acczCurve.setData(self.plottime, self.accz)
         self.gyroxCurve.setData(self.plottime, self.gyrox)
         self.gyroyCurve.setData(self.plottime, self.gyroy)
         self.gyrozCurve.setData(self.plottime, self.gyroz)
         self.sampleTimeLabel.setText(str(self.dt))
-        self.measurementPlot.setXRange(self.plottime[-1] - 10, self.plottime[-1])
+        #self.measurementPlot.setXRange(self.plottime[-1] - 10, self.plottime[-1])
 
 
 
@@ -91,7 +92,7 @@ class TeensySerial(QThread):
         teensy_port = tuple()
         for port in ports_avaiable:
             print(port)
-            if port[1].startswith("Teensy") or port[0] == '/dev/ttyACM0':
+            if port[1].startswith("Teensy") or port[0] == '/dev/ttyACM0' or port[0] == '/dev/ttyACM1':
                 teensy_port = port
         if teensy_port:
             return teensy_port
