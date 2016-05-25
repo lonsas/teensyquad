@@ -50,7 +50,6 @@ THE SOFTWARE.
 // -----------------------------------------------------------------------------
 // I2C interface implementation setting
 // -----------------------------------------------------------------------------
-#define I2CDEV_IMPLEMENTATION I2C_T3
 #ifndef I2CDEV_IMPLEMENTATION
 #define I2CDEV_IMPLEMENTATION       I2CDEV_ARDUINO_WIRE
 //#define I2CDEV_IMPLEMENTATION       I2CDEV_BUILTIN_FASTWIRE
@@ -74,24 +73,11 @@ THE SOFTWARE.
 // -----------------------------------------------------------------------------
 //#define I2CDEV_SERIAL_DEBUG
 
-#ifdef ARDUINO
-    #if ARDUINO < 100
-        #include "WProgram.h"
-    #else
-        #include "Arduino.h"
-    #endif
-    #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
-        #include <Wire.h>
-    #endif
-    #if I2CDEV_IMPLEMENTATION == I2CDEV_I2CMASTER_LIBRARY
-        #include <I2C.h>
-    #endif
-    #if I2CDEV_IMPLEMENTATION == I2C_T3
-        #include <i2c_t3.h>
-        #define BUFFER_LENGTH 32
-    #endif
 
-#endif
+#include "WProgram.h"
+#include <i2c_t3.h>
+#define BUFFER_LENGTH 32
+
 
 #ifdef SPARK
     #include <spark_wiring_i2c.h>

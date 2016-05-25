@@ -3,6 +3,8 @@
 /* Used for interrupts */
 #include "core_pins.h"
 #include "i2c_t3.h"
+#include "I2Cdev.h"
+#include "MPU9150.h"
 
 
 #define RADIO_PINS 6
@@ -27,6 +29,8 @@ struct serialData {
     uint32_t t;
     uint32_t dt;
 } serialData;
+
+MPU9150 mpu9150;
 
 void radio_pw_rise_isr() {
     radio_rise = micros();
@@ -90,27 +94,14 @@ uint16_t read_16bit_register(uint8_t high) {
 
 
 void sensor_test() {
-    acc[0] = read_16bit_register(0x3b);
-    acc[1] = read_16bit_register(0x3d);
-    acc[2] = read_16bit_register(0x3f);
-    
-    gyro[0] = read_16bit_register(0x43);
-    gyro[1] = read_16bit_register(0x45);
-    gyro[2] = read_16bit_register(0x47);
+    //mpu9150.getMotion9(&acc[0], &acc[1], &acc[2], &gyro[0], &gyro[1], &gyro[2], &mag[0], &mag[1], &mag[2]);
+    mpu9150.getMotion6(&acc[0], &acc[1], &acc[2], &gyro[0], &gyro[1], &gyro[2]);
 }
 
 void setup_sensor() {
-    delay(1000);
     Wire.begin(I2C_MASTER,0x0, I2C_PINS_18_19, I2C_PULLUP_EXT, I2C_RATE_400);
-    Wire.beginTransmission(SENSOR_ADDRESS);
-    Wire.write(0x6b);
-    Wire.write(0);
-    Wire.endTransmission(I2C_STOP);
-
-    Wire.beginTransmission(SENSOR_ADDRESS);
-    Wire.write(0x1c);
-    Wire.write(0b00001000);
-    Wire.endTransmission(I2C_STOP);
+    
+    mpu9150.initialize();
 }
 
 
@@ -139,8 +130,8 @@ extern "C" int main(void)
             serialData.t = micros();
             serialData.dt = serialData.t - t_start;
             Serial.write((char *)&serialData, sizeof(serialData));
-/*
-            Serial.print("\tch1:");
+
+/*            Serial.print("\tch1:");
             Serial.print(width[0]);
             Serial.print("\tch2:");
             Serial.print(width[1]);
