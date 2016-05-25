@@ -55,6 +55,12 @@ void radio_pw5_isr() {
         width[5] = micros() - radio_rise;
 }
 
+void sendserialData() {
+    Serial.write(1);
+    Serial.write((char *)&serialData, sizeof(serialData));
+    Serial.write(2);
+}
+
 void setup_radio() {
     
     pinMode(RADIOPIN_RISE, INPUT);
@@ -100,7 +106,7 @@ void sensor_test() {
 
 void setup_sensor() {
     Wire.begin(I2C_MASTER,0x0, I2C_PINS_18_19, I2C_PULLUP_EXT, I2C_RATE_400);
-    
+    delay(10000); 
     mpu9150.initialize();
 }
 
@@ -116,6 +122,7 @@ extern "C" int main(void)
     uint32_t i = 0;
     uint32_t t_start = micros();
     uint16_t output;
+    digitalWrite(13, HIGH);
 	while (1) {
             sensor_test();
             i++;
@@ -129,8 +136,7 @@ extern "C" int main(void)
             serialData.gyro[2] = gyro[2];
             serialData.t = micros();
             serialData.dt = serialData.t - t_start;
-            Serial.write((char *)&serialData, sizeof(serialData));
-
+            sendserialData();
 /*            Serial.print("\tch1:");
             Serial.print(width[0]);
             Serial.print("\tch2:");

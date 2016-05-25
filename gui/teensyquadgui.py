@@ -30,7 +30,7 @@ class TeensyGUI(QtGui.QMainWindow, design.Ui_MainWindow):
 
     def setupGraphs(self):
         self.measurementPlot.setYRange(-2**14, 2**14)
-        self.measurementPlot.setClipToView(True)
+        #self.measurementPlot.setClipToView(True)
         self.measurementPlot.setLimits(yMax=2**15, yMin=-2**15)
 
         self.accxCurve = self.measurementPlot.plot(pen=(0, 6))
@@ -69,12 +69,13 @@ class TeensyGUI(QtGui.QMainWindow, design.Ui_MainWindow):
 
 
     def updatePlots(self):
-        self.accxCurve.setData(self.plottime, self.accx)
-        self.accyCurve.setData(self.plottime, self.accy)
-        self.acczCurve.setData(self.plottime, self.accz)
-        self.gyroxCurve.setData(self.plottime, self.gyrox)
-        self.gyroyCurve.setData(self.plottime, self.gyroy)
-        self.gyrozCurve.setData(self.plottime, self.gyroz)
+        len = 10**5 # Not too much data to plot, clipping is horrible
+        self.accxCurve.setData(self.plottime[-len:], self.accx[-len:])
+        self.accyCurve.setData(self.plottime[-len:], self.accy[-len:])
+        self.acczCurve.setData(self.plottime[-len:], self.accz[-len:])
+        self.gyroxCurve.setData(self.plottime[-len:], self.gyrox[-len:])
+        self.gyroyCurve.setData(self.plottime[-len:], self.gyroy[-len:])
+        self.gyrozCurve.setData(self.plottime[-len:], self.gyroz[-len:])
         self.sampleTimeLabel.setText(str(self.dt))
         if(self.autoPanButton.isChecked()):
             if self.xrange == None:
@@ -106,18 +107,23 @@ class TeensySerial(QThread):
             return teensy_port
 
     def close(self):
+
         if self.teensy.isOpen():
             self.teensy.close()
 
-    def output(self):
-        sensors = sensorStruct.parse(self.teensy.read(sensorStruct.sizeof()))
-        self.emit(self.signal, sensors)
+
     def run(self):
-        #Just ignore initial garbage
-        for x in range(100):
-            self.teensy.read(sensorStruct.sizeof())
         while(True):
-            self.output()
+            while(self.teensy.in_waiting == 0):
+                self.yieldCurrentThread()
+            while(self.teensy.read() != b'\x01'):
+                print("invalid data package 1")
+                pass
+            data = self.teensy.read(sensorStruct.sizeof())
+            if(self.teensy.read() == b'\x02'): # This has probably been a valid package
+                self.emit(self.signal, sensorStruct.parse(data))
+            #else:
+                #print("invalid data package 2")
 
 
 
