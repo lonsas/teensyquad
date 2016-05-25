@@ -107,10 +107,10 @@ void setup_sensor() {
     Wire.write(0);
     Wire.endTransmission(I2C_STOP);
 
-    /*Wire.beginTransmission(SENSOR_ADDRESS);
+    Wire.beginTransmission(SENSOR_ADDRESS);
     Wire.write(0x1c);
     Wire.write(0b00001000);
-    Wire.endTransmission(I2C_STOP);*/
+    Wire.endTransmission(I2C_STOP);
 }
 
 

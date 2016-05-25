@@ -6,9 +6,9 @@ from PyQt4 import QtCore
 import design
 import serial
 from serial.tools import list_ports
-from construct import Struct, UBInt8, SBInt16, UBInt32, SLInt16, ULInt32
+from construct import Struct, UBInt8, SBInt16, UBInt32, SLInt16, ULInt32, ULInt8
 from pyqtgraph.ptime import time
-
+import pyqtgraph
 
 sensorStruct = Struct("datastruct",
                     SLInt16("accx"),
@@ -20,36 +20,37 @@ sensorStruct = Struct("datastruct",
                     ULInt32("t"),
                     ULInt32("dt"))
 
-
+pyqtgraph.setConfigOption('background', 'w')
+pyqtgraph.setConfigOption('foreground', 'k')
 class TeensyGUI(QtGui.QMainWindow, design.Ui_MainWindow):
     def __init__(self, parent=None):
         super(TeensyGUI, self).__init__(parent)
         self.setupUi(self)
+        self.setupGraphs()
+
+    def setupGraphs(self):
         self.measurementPlot.setYRange(-2**14, 2**14)
+        self.measurementPlot.setClipToView(True)
+        self.measurementPlot.setLimits(yMax=2**15, yMin=-2**15)
+
         self.accxCurve = self.measurementPlot.plot(pen=(0, 6))
-        self.accx = [0]
+        self.accx = []
         self.accyCurve = self.measurementPlot.plot(pen=(1, 6))
-        self.accy = [0]
+        self.accy = []
         self.acczCurve = self.measurementPlot.plot(pen=(2, 6))
-        self.accz = [0]
+        self.accz = []
         self.gyroxCurve = self.measurementPlot.plot(pen=(3, 6))
-        self.gyrox = [0]
+        self.gyrox = []
         self.gyroyCurve = self.measurementPlot.plot(pen=(4, 6))
-        self.gyroy = [0]
+        self.gyroy = []
         self.gyrozCurve = self.measurementPlot.plot(pen=(5, 6))
-        self.gyroz = [0]
+        self.gyroz = []
         self.startTime = time()
-        self.plottime = [0]
+        self.plottime = []
         self.dt = 0
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updatePlots)
         self.timer.start(50)
-
-
-
-
-        #self.pushButtonA.clicked.connect(simpleAction)
-        #self.curve = self.plotA.plot(pen=(255,0,0))
 
 
     def initialize(self, dataserial):
@@ -68,15 +69,22 @@ class TeensyGUI(QtGui.QMainWindow, design.Ui_MainWindow):
 
 
     def updatePlots(self):
-        self.accxCurve.setData(self.plottime, self.accx,symbolBrush=(255,0,0), symbolPen='w')
+        self.accxCurve.setData(self.plottime, self.accx)
         self.accyCurve.setData(self.plottime, self.accy)
         self.acczCurve.setData(self.plottime, self.accz)
         self.gyroxCurve.setData(self.plottime, self.gyrox)
         self.gyroyCurve.setData(self.plottime, self.gyroy)
         self.gyrozCurve.setData(self.plottime, self.gyroz)
         self.sampleTimeLabel.setText(str(self.dt))
-        #self.measurementPlot.setXRange(self.plottime[-1] - 10, self.plottime[-1])
-
+        if(self.autoPanButton.isChecked()):
+            if self.xrange == None:
+                [[xmin, xmax], [ymin, ymax]] = self.measurementPlot.viewRange()
+                self.xrange = xmax-xmin
+            print(self.xrange)
+            #self.measurementPlot.setLimits(xMax=self.plottime[-1])
+            self.measurementPlot.setXRange(self.plottime[-1] - self.xrange, self.plottime[-1])
+        else:
+            self.xrange = None
 
 
 class TeensySerial(QThread):
@@ -101,10 +109,15 @@ class TeensySerial(QThread):
         if self.teensy.isOpen():
             self.teensy.close()
 
+    def output(self):
+        sensors = sensorStruct.parse(self.teensy.read(sensorStruct.sizeof()))
+        self.emit(self.signal, sensors)
     def run(self):
+        #Just ignore initial garbage
+        for x in range(100):
+            self.teensy.read(sensorStruct.sizeof())
         while(True):
-            sensors = sensorStruct.parse(self.teensy.read(sensorStruct.sizeof()))
-            self.emit(self.signal, sensors)
+            self.output()
 
 
 
