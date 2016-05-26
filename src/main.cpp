@@ -6,7 +6,6 @@
 #include "I2Cdev.h"
 #include "MPU9150.h"
 
-
 #define RADIO_PINS 6
 
 #define SENSOR_ADDRESS 0x68
@@ -99,14 +98,14 @@ uint16_t read_16bit_register(uint8_t high) {
 }
 
 
-void sensor_test() {
-    //mpu9150.getMotion9(&acc[0], &acc[1], &acc[2], &gyro[0], &gyro[1], &gyro[2], &mag[0], &mag[1], &mag[2]);
+void read_sensors() {
     mpu9150.getMotion6(&acc[0], &acc[1], &acc[2], &gyro[0], &gyro[1], &gyro[2]);
 }
 
+
 void setup_sensor() {
     Wire.begin(I2C_MASTER,0x0, I2C_PINS_18_19, I2C_PULLUP_EXT, I2C_RATE_400);
-    delay(10000); 
+    delay(1000); 
     mpu9150.initialize();
 }
 
@@ -124,7 +123,7 @@ extern "C" int main(void)
     uint16_t output;
     digitalWrite(13, HIGH);
 	while (1) {
-            sensor_test();
+            read_sensors();
             i++;
             output = width[2]*1.6384;
             analogWrite(MOTORPIN, output);
