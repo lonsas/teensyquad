@@ -3,8 +3,6 @@
 /* Used for interrupts */
 #include "core_pins.h"
 #include "i2c_t3.h"
-#include "I2Cdev.h"
-#include "MPU9150.h"
 
 #define RADIO_PINS 6
 
@@ -28,8 +26,6 @@ struct serialData {
     uint32_t t;
     uint32_t dt;
 } serialData;
-
-MPU9150 mpu9150;
 
 void radio_pw_rise_isr() {
     radio_rise = micros();
@@ -99,14 +95,28 @@ uint16_t read_16bit_register(uint8_t high) {
 
 
 void read_sensors() {
-    mpu9150.getMotion6(&acc[0], &acc[1], &acc[2], &gyro[0], &gyro[1], &gyro[2]);
+    acc[0] = read_16bit_register(0x3b);
+    acc[1] = read_16bit_register(0x3d);
+    acc[2] = read_16bit_register(0x3f);
+    
+    gyro[0] = read_16bit_register(0x43);
+    gyro[1] = read_16bit_register(0x45);
+    gyro[2] = read_16bit_register(0x47);
 }
 
 
 void setup_sensor() {
+    delay(1000);
     Wire.begin(I2C_MASTER,0x0, I2C_PINS_18_19, I2C_PULLUP_EXT, I2C_RATE_400);
-    delay(1000); 
-    mpu9150.initialize();
+    Wire.beginTransmission(SENSOR_ADDRESS);
+    Wire.write(0x6b);
+    Wire.write(0);
+    Wire.endTransmission(I2C_STOP);
+
+    Wire.beginTransmission(SENSOR_ADDRESS);
+    Wire.write(0x1c);
+    Wire.write(0b00001000);
+    Wire.endTransmission(I2C_STOP);
 }
 
 
