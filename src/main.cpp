@@ -4,20 +4,17 @@
 #include "core_pins.h"
 #include "i2c_t3.h"
 #include "PID.h"
-#include "sensor_fusion.h"
 #include "I2Cdev.h"
 #include "MPU9150.h"
+#include "MadgwickAHRS.h"
 
 #define RADIO_PINS 6
 
 #define SENSOR_ADDRESS 0x68
-#define MPU9150_ACCX 0x3b
-#define MPU9150_ACCY 0x3d
-#define MPU9150_ACCZ 0x3f
-#define MPU9150_GYROX 0x43
-#define MPU9150_GYROY 0x45
-#define MPU9150_GYROZ 0x47
-#define MPU9150_PWR 0x6b
+
+#define X 0
+#define Y 0
+#define Z 0
 
 const static uint8_t RADIOPIN[RADIO_PINS] = {3,4,5,6,7,8};
 /* Make sure the RISE pin is on a failsafe signal i.e throttle */
@@ -35,6 +32,9 @@ struct serialData {
     int16_t gyro[3];
     uint32_t t;
     uint32_t dt;
+    float pitch;
+    float roll;
+    float yaw;
 } serialData;
 
 MPU9150 mpu9150;
@@ -78,6 +78,8 @@ void sendserialData(uint32_t t, uint32_t dt) {
         Serial.send_now();
     }
 }
+
+
 
 void setup_radio() {
     
@@ -148,12 +150,10 @@ extern "C" int main(void)
     setup_motor();
     setup_mpu();
 	pinMode(13, OUTPUT);
-    uint32_t t_start = micros();
-    uint32_t t_end;
-    uint32_t dt;
     uint16_t output;
     digitalWrite(13, HIGH);
-    
+
+    uint32_t h = 10000;
     PIDParameters pidParametersRoll;
     PIDParameters pidParametersPitch;
     PIDParameters pidParametersYaw;
@@ -165,18 +165,25 @@ extern "C" int main(void)
     initParameters(&pidParametersPitch, &pidStatePitch);
     initParameters(&pidParametersYaw, &pidStateYaw);
     
-    SensorData sensorData;
+    Madgwick sensor_fusion;
+    sensor_fusion.begin(1000);
+    uint32_t t_start = micros();
+    uint32_t t_end = t_start;
+    uint32_t dt = 0;
 	while (1) {
             read_sensors();
-            calculateRoll(&sensorData);
+            sensor_fusion.updateIMU(gyro[X]/250.0f, gyro[Y]/250.0f, gyro[Z]/250.0f, acc[X]/250.0f, acc[Y]/250.0f, acc[Z]/250.0f);
+            serialData.roll = sensor_fusion.getRoll();
+            serialData.pitch = sensor_fusion.getPitch();
+            serialData.yaw = sensor_fusion.getYaw();
             output = width[2]*1.6384;
             analogWrite(MOTORPIN, output);
+            sendserialData(t_end, dt);
             t_end = micros();
             dt = t_end - t_start;
-            sendserialData(t_end, dt);
+            /* Fixed sample rate */
+            while(micros() - t_start < h);
             t_start = t_end;
-            
-    
     }
 }
 

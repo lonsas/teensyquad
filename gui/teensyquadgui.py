@@ -6,7 +6,7 @@ from PyQt4 import QtCore
 import design
 import serial
 from serial.tools import list_ports
-from construct import Struct, UBInt8, SBInt16, UBInt32, SLInt16, ULInt32, ULInt8
+from construct import Struct, UBInt8, SBInt16, UBInt32, SLInt16, ULInt32, ULInt8, SLInt32, LFloat32
 from pyqtgraph.ptime import time
 import pyqtgraph
 
@@ -18,7 +18,10 @@ sensorStruct = Struct("datastruct",
                     SLInt16("gyroy"),
                     SLInt16("gyroz"),
                     ULInt32("t"),
-                    ULInt32("dt"))
+                    ULInt32("dt"),
+                    LFloat32("pitch"),
+                    LFloat32("roll"),
+                    LFloat32("yaw"))
 
 pyqtgraph.setConfigOption('background', 'w')
 pyqtgraph.setConfigOption('foreground', 'k')
@@ -45,6 +48,15 @@ class TeensyGUI(QtGui.QMainWindow, design.Ui_MainWindow):
         self.gyroy = []
         self.gyrozCurve = self.measurementPlot.plot(pen=(5, 6))
         self.gyroz = []
+
+        self.pitchCurve = self.outputPlot.plot(pen=(0, 3))
+        self.pitch = []
+        self.rollCurve = self.outputPlot.plot(pen=(1, 3))
+        self.roll = []
+        self.yawCurve = self.outputPlot.plot(pen=(2, 3))
+        self.yaw = []
+
+
         self.startTime = time()
         self.plottime = []
         self.dt = 0
@@ -64,6 +76,9 @@ class TeensyGUI(QtGui.QMainWindow, design.Ui_MainWindow):
         self.gyrox.append(data.gyrox)
         self.gyroy.append(data.gyroy)
         self.gyroz.append(data.gyroz)
+        self.pitch.append(data.pitch)
+        self.roll.append(data.roll)
+        self.yaw.append(data.yaw)
         self.plottime.append(data.t/1000000)
         self.dt = data.dt
 
@@ -76,6 +91,12 @@ class TeensyGUI(QtGui.QMainWindow, design.Ui_MainWindow):
         self.gyroxCurve.setData(self.plottime[-len:], self.gyrox[-len:])
         self.gyroyCurve.setData(self.plottime[-len:], self.gyroy[-len:])
         self.gyrozCurve.setData(self.plottime[-len:], self.gyroz[-len:])
+
+        self.rollCurve.setData(self.plottime[-len:], self.pitch[-len:])
+        self.pitchCurve.setData(self.plottime[-len:], self.roll[-len:])
+        self.yawCurve.setData(self.plottime[-len:], self.yaw[-len:])
+
+
         self.sampleTimeLabel.setText(str(self.dt))
         if(self.autoPanButton.isChecked()):
             if self.xrange == None:

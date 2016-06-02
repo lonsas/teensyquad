@@ -21,7 +21,7 @@ typedef struct {
 } SensorData;
 
 
-int32_t calculateRoll(SensorData *);
+double calculateRoll(SensorData *);
 
 #ifdef __cplusplus
 }
