@@ -5,6 +5,8 @@
 #include "i2c_t3.h"
 #include "PID.h"
 #include "sensor_fusion.h"
+#include "I2Cdev.h"
+#include "MPU9150.h"
 
 #define RADIO_PINS 6
 
@@ -34,6 +36,8 @@ struct serialData {
     uint32_t t;
     uint32_t dt;
 } serialData;
+
+MPU9150 mpu9150;
 
 void radio_pw_rise_isr() {
     radio_rise = micros();
@@ -114,28 +118,14 @@ uint16_t read_16bit_register(uint8_t high) {
 
 
 void read_sensors() {
-    acc[0] = read_16bit_register(MPU9150_ACCX);
-    acc[1] = read_16bit_register(MPU9150_ACCY);
-    acc[2] = read_16bit_register(MPU9150_ACCZ);
-    
-    gyro[0] = read_16bit_register(MPU9150_GYROX);
-    gyro[1] = read_16bit_register(MPU9150_GYROY);
-    gyro[2] = read_16bit_register(MPU9150_GYROZ);
+    mpu9150.getMotion6(&acc[0], &acc[1], &acc[2], &gyro[0], &gyro[1], &gyro[2]);
 }
 
 
 void setup_mpu() {
     Wire.begin(I2C_MASTER,0x0, I2C_PINS_18_19, I2C_PULLUP_EXT, I2C_RATE_400);
-    delay(1000);
-    Wire.beginTransmission(SENSOR_ADDRESS);
-    Wire.write(0x6b);
-    Wire.write(1);
-    Wire.endTransmission(I2C_STOP);
-
-    Wire.beginTransmission(SENSOR_ADDRESS);
-    Wire.write(0x1c);
-    Wire.write(0b00000000);
-    Wire.endTransmission(I2C_STOP);
+    delay(1000); 
+    mpu9150.initialize();
 }
 
 void initParameters(PIDParameters *p, PIDState *s) {
