@@ -4,6 +4,7 @@
 #include "core_pins.h"
 #include "i2c_t3.h"
 #include "PID.h"
+#include "sensor_fusion.h"
 
 #define RADIO_PINS 6
 
@@ -26,7 +27,6 @@ volatile uint32_t width[6];
 
 int16_t acc[3];
 int16_t gyro[3];
-int16_t mag[3];
 
 struct serialData {
     int16_t acc[3];
@@ -138,14 +138,15 @@ void setup_mpu() {
     Wire.endTransmission(I2C_STOP);
 }
 
-initParameters(PIDParameters *p, PIDState *s) {
+void initParameters(PIDParameters *p, PIDState *s) {
     p->K = 1;
     p->Ti = 1;
     p->Td = 1;
     p->N = 1;
     p->b = 0;
     p->h = 10000;
-    setParameters(pidParameters);
+    mix();
+    setParameters(p);
     resetState(s);
 }
 
@@ -170,13 +171,14 @@ extern "C" int main(void)
     PIDState pidStatePitch;
     PIDState pidStateYaw;
 
-    initParameters(pidParametersRoll, pidStateRoll);
-    initParameters(pidParametersPitch, pidStatePitch);
-    initParameters(pidParametersYaw, pidStateYaw);
+    initParameters(&pidParametersRoll, &pidStateRoll);
+    initParameters(&pidParametersPitch, &pidStatePitch);
+    initParameters(&pidParametersYaw, &pidStateYaw);
     
+    SensorData sensorData;
 	while (1) {
             read_sensors();
-            
+            calculateRoll(&sensorData);
             output = width[2]*1.6384;
             analogWrite(MOTORPIN, output);
             t_end = micros();
