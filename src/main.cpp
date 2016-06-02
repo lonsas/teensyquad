@@ -3,6 +3,7 @@
 /* Used for interrupts */
 #include "core_pins.h"
 #include "i2c_t3.h"
+#include "PID.h"
 
 #define RADIO_PINS 6
 
@@ -137,6 +138,16 @@ void setup_mpu() {
     Wire.endTransmission(I2C_STOP);
 }
 
+initParameters(PIDParameters *p, PIDState *s) {
+    p->K = 1;
+    p->Ti = 1;
+    p->Td = 1;
+    p->N = 1;
+    p->b = 0;
+    p->h = 10000;
+    setParameters(pidParameters);
+    resetState(s);
+}
 
 
 
@@ -151,8 +162,21 @@ extern "C" int main(void)
     uint32_t dt;
     uint16_t output;
     digitalWrite(13, HIGH);
+    
+    PIDParameters pidParametersRoll;
+    PIDParameters pidParametersPitch;
+    PIDParameters pidParametersYaw;
+    PIDState pidStateRoll;
+    PIDState pidStatePitch;
+    PIDState pidStateYaw;
+
+    initParameters(pidParametersRoll, pidStateRoll);
+    initParameters(pidParametersPitch, pidStatePitch);
+    initParameters(pidParametersYaw, pidStateYaw);
+    
 	while (1) {
             read_sensors();
+            
             output = width[2]*1.6384;
             analogWrite(MOTORPIN, output);
             t_end = micros();

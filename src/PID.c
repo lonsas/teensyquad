@@ -27,6 +27,12 @@ void updateState(PIDParameters *p, PIDState *s, Signals *sig, int32_t u) {
     s->oldY = sig->y;
 }
 
+void resetState(PIDState *s) {
+    s->I = 0;
+    s->D = 0;
+    s->oldY = 0;
+}
+
 
 void setParameters(PIDParameters *p) {
     p->ad = p->Td / (p->Td + p->N * p->h);

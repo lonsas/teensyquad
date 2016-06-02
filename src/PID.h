@@ -31,5 +31,6 @@ typedef struct {
 void calculateOutput(PIDParameters *p, PIDState *s, Signals *sig, int32_t ref, int32_t y);
 void updateState(PIDParameters *p, PIDState *s, Signals *sig, int32_t u);
 void setParameters(PIDParameters *p);
+void resetState(PIDState *s);
     
 void mix();
