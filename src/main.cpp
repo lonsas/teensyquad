@@ -7,6 +7,13 @@
 #define RADIO_PINS 6
 
 #define SENSOR_ADDRESS 0x68
+#define MPU9150_ACCX 0x3b
+#define MPU9150_ACCY 0x3d
+#define MPU9150_ACCZ 0x3f
+#define MPU9150_GYROX 0x43
+#define MPU9150_GYROY 0x45
+#define MPU9150_GYROZ 0x47
+#define MPU9150_PWR 0x6b
 
 const static uint8_t RADIOPIN[RADIO_PINS] = {3,4,5,6,7,8};
 /* Make sure the RISE pin is on a failsafe signal i.e throttle */
@@ -50,10 +57,21 @@ void radio_pw5_isr() {
         width[5] = micros() - radio_rise;
 }
 
-void sendserialData() {
-    Serial.write(1);
-    Serial.write((char *)&serialData, sizeof(serialData));
-    Serial.write(2);
+void sendserialData(uint32_t t, uint32_t dt) {
+    serialData.acc[0] = acc[0];
+    serialData.acc[1] = acc[1];
+    serialData.acc[2] = acc[2];
+    serialData.gyro[0] = gyro[0];
+    serialData.gyro[1] = gyro[1];
+    serialData.gyro[2] = gyro[2];
+    serialData.t = t;
+    serialData.dt = dt;
+    if(Serial.dtr()) {
+        Serial.write(1);
+        Serial.write((char *)&serialData, sizeof(serialData));
+        Serial.write(2);
+        Serial.send_now();
+    }
 }
 
 void setup_radio() {
@@ -82,40 +100,40 @@ uint16_t read_16bit_register(uint8_t high) {
     Wire.beginTransmission(SENSOR_ADDRESS);
     Wire.write(high);
     Wire.endTransmission(I2C_STOP);
-    Wire.requestFrom(SENSOR_ADDRESS, 1, I2C_NOSTOP);
+    Wire.requestFrom(SENSOR_ADDRESS, 1, I2C_STOP);
     result = (Wire.readByte() << 8);
     
     Wire.beginTransmission(SENSOR_ADDRESS);
     Wire.write(high+1);
     Wire.endTransmission(I2C_STOP);
-    Wire.requestFrom(SENSOR_ADDRESS, 1, I2C_NOSTOP);
+    Wire.requestFrom(SENSOR_ADDRESS, 1, I2C_STOP);
     result |= Wire.readByte();
     return result;
 }
 
 
 void read_sensors() {
-    acc[0] = read_16bit_register(0x3b);
-    acc[1] = read_16bit_register(0x3d);
-    acc[2] = read_16bit_register(0x3f);
+    acc[0] = read_16bit_register(MPU9150_ACCX);
+    acc[1] = read_16bit_register(MPU9150_ACCY);
+    acc[2] = read_16bit_register(MPU9150_ACCZ);
     
-    gyro[0] = read_16bit_register(0x43);
-    gyro[1] = read_16bit_register(0x45);
-    gyro[2] = read_16bit_register(0x47);
+    gyro[0] = read_16bit_register(MPU9150_GYROX);
+    gyro[1] = read_16bit_register(MPU9150_GYROY);
+    gyro[2] = read_16bit_register(MPU9150_GYROZ);
 }
 
 
-void setup_sensor() {
-    delay(1000);
+void setup_mpu() {
     Wire.begin(I2C_MASTER,0x0, I2C_PINS_18_19, I2C_PULLUP_EXT, I2C_RATE_400);
+    delay(1000);
     Wire.beginTransmission(SENSOR_ADDRESS);
     Wire.write(0x6b);
-    Wire.write(0);
+    Wire.write(1);
     Wire.endTransmission(I2C_STOP);
 
     Wire.beginTransmission(SENSOR_ADDRESS);
     Wire.write(0x1c);
-    Wire.write(0b00001000);
+    Wire.write(0b00000000);
     Wire.endTransmission(I2C_STOP);
 }
 
@@ -126,58 +144,21 @@ extern "C" int main(void)
 {
     setup_radio();
     setup_motor();
-    setup_sensor();
+    setup_mpu();
 	pinMode(13, OUTPUT);
-    uint32_t i = 0;
     uint32_t t_start = micros();
+    uint32_t t_end;
+    uint32_t dt;
     uint16_t output;
     digitalWrite(13, HIGH);
 	while (1) {
             read_sensors();
-            i++;
             output = width[2]*1.6384;
             analogWrite(MOTORPIN, output);
-            serialData.acc[0] = acc[0];
-            serialData.acc[1] = acc[1];
-            serialData.acc[2] = acc[2];
-            serialData.gyro[0] = gyro[0];
-            serialData.gyro[1] = gyro[1];
-            serialData.gyro[2] = gyro[2];
-            serialData.t = micros();
-            serialData.dt = serialData.t - t_start;
-            sendserialData();
-/*            Serial.print("\tch1:");
-            Serial.print(width[0]);
-            Serial.print("\tch2:");
-            Serial.print(width[1]);
-            Serial.print("\tch3:");
-            Serial.print(width[2]);
-            Serial.print("\tch4:");
-            Serial.print(width[3]);
-            Serial.print("\tch5:");
-            Serial.print(width[4]);
-            Serial.print("\tch6:");
-            Serial.print(width[5]);
-            Serial.print("\tmotor:");
-            Serial.print(output);
-            
-            Serial.println("ax: ");
-            Serial.println(acc[0]);
-            Serial.print("\tay: ");
-            Serial.print(acc[1]);
-            Serial.print("\taz: ");
-            Serial.print(acc[2]);
-            Serial.print("\tgx: ");
-            Serial.print(gyro[0]);
-            Serial.print("\tgy: ");
-            Serial.print(gyro[1]);
-            Serial.print("\tgz: ");
-            Serial.print(gyro[2]);
-            Serial.print("\tdt: ");
-            Serial.print(micros() - t_start);
-            Serial.println("");
-            */
-            t_start = micros();
+            t_end = micros();
+            dt = t_end - t_start;
+            sendserialData(t_end, dt);
+            t_start = t_end;
             
     
     }
