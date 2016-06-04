@@ -17,6 +17,7 @@ sensorStruct = Struct("datastruct",
                     SLInt16("gyrox"),
                     SLInt16("gyroy"),
                     SLInt16("gyroz"),
+
                     ULInt32("t"),
                     ULInt32("dt"),
                     LFloat32("pitch"),
@@ -48,6 +49,8 @@ class TeensyGUI(QtGui.QMainWindow, design.Ui_MainWindow):
         self.gyroy = []
         self.gyrozCurve = self.measurementPlot.plot(pen=(5, 6))
         self.gyroz = []
+        self.gyroxCurve = self.measurementPlot.plot(pen=(3, 6))
+
 
         self.pitchCurve = self.outputPlot.plot(pen=(0, 3))
         self.pitch = []

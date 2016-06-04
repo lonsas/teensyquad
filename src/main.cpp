@@ -13,8 +13,8 @@
 #define SENSOR_ADDRESS 0x68
 
 #define X 0
-#define Y 0
-#define Z 0
+#define Y 1
+#define Z 2
 
 const static uint8_t RADIOPIN[RADIO_PINS] = {3,4,5,6,7,8};
 /* Make sure the RISE pin is on a failsafe signal i.e throttle */
@@ -26,6 +26,9 @@ volatile uint32_t width[6];
 
 int16_t acc[3];
 int16_t gyro[3];
+int16_t mag[3];
+int16_t acc_offset[3];
+int16_t gyro_offset[3];
 
 struct serialData {
     int16_t acc[3];
@@ -120,7 +123,13 @@ uint16_t read_16bit_register(uint8_t high) {
 
 
 void read_sensors() {
-    mpu9150.getMotion6(&acc[0], &acc[1], &acc[2], &gyro[0], &gyro[1], &gyro[2]);
+    mpu9150.getMotion9(&acc[0], &acc[1], &acc[2], &gyro[0], &gyro[1], &gyro[2], &mag[X], &mag[Y], &mag[Z]);
+    acc[X] = acc[X];// - acc_offset[X];
+    acc[Y] = acc[Y];// - acc_offset[Y];
+    acc[Z] = acc[Z];// - acc_offset[Z];
+    gyro[X] = gyro[X] - gyro_offset[X];
+    gyro[Y] = gyro[Y] - gyro_offset[Y];
+    gyro[Z] = gyro[Z] - gyro_offset[Z];
 }
 
 
@@ -128,6 +137,15 @@ void setup_mpu() {
     Wire.begin(I2C_MASTER,0x0, I2C_PINS_18_19, I2C_PULLUP_EXT, I2C_RATE_400);
     delay(1000); 
     mpu9150.initialize();
+    
+    read_sensors();
+    acc_offset[X] = acc[X];
+    acc_offset[Y] = acc[Y];
+    acc_offset[Z] = acc[Z];
+    gyro_offset[X] = gyro[X];
+    gyro_offset[Y] = gyro[Y];
+    gyro_offset[Z] = gyro[Z];
+
 }
 
 void initParameters(PIDParameters *p, PIDState *s) {
@@ -153,7 +171,7 @@ extern "C" int main(void)
     uint16_t output;
     digitalWrite(13, HIGH);
 
-    uint32_t h = 10000;
+    uint32_t h = 30000;
     PIDParameters pidParametersRoll;
     PIDParameters pidParametersPitch;
     PIDParameters pidParametersYaw;
@@ -166,13 +184,14 @@ extern "C" int main(void)
     initParameters(&pidParametersYaw, &pidStateYaw);
     
     Madgwick sensor_fusion;
-    sensor_fusion.begin(1000);
+    sensor_fusion.begin(1/(h/1000000.0f));
     uint32_t t_start = micros();
     uint32_t t_end = t_start;
     uint32_t dt = 0;
 	while (1) {
+            digitalWrite(13, HIGH);
             read_sensors();
-            sensor_fusion.updateIMU(gyro[X]/250.0f, gyro[Y]/250.0f, gyro[Z]/250.0f, acc[X]/250.0f, acc[Y]/250.0f, acc[Z]/250.0f);
+            sensor_fusion.update(gyro[X]/250.0f, gyro[Y]/250.0f, gyro[Z]/250.0f, acc[X], acc[Y], acc[Z], mag[X], mag[Y], mag[Z]);
             serialData.roll = sensor_fusion.getRoll();
             serialData.pitch = sensor_fusion.getPitch();
             serialData.yaw = sensor_fusion.getYaw();
@@ -181,6 +200,7 @@ extern "C" int main(void)
             sendserialData(t_end, dt);
             t_end = micros();
             dt = t_end - t_start;
+            digitalWrite(13, LOW);
             /* Fixed sample rate */
             while(micros() - t_start < h);
             t_start = t_end;
