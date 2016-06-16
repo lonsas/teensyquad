@@ -69,9 +69,9 @@ void sendserialData(uint32_t t, uint32_t dt) {
     serialData.acc[0] = acc[0];
     serialData.acc[1] = acc[1];
     serialData.acc[2] = acc[2];
-    serialData.gyro[0] = gyro[0];
-    serialData.gyro[1] = gyro[1];
-    serialData.gyro[2] = gyro[2];
+    serialData.gyro[0] = mag[0];
+    serialData.gyro[1] = mag[1];
+    serialData.gyro[2] = mag[2];
     serialData.t = t;
     serialData.dt = dt;
     if(Serial.dtr()) {
@@ -122,14 +122,31 @@ uint16_t read_16bit_register(uint8_t high) {
 }
 
 
-void read_sensors() {
+void read_sensors9() {
     mpu9150.getMotion9(&acc[0], &acc[1], &acc[2], &gyro[0], &gyro[1], &gyro[2], &mag[X], &mag[Y], &mag[Z]);
-    acc[X] = acc[X];// - acc_offset[X];
-    acc[Y] = acc[Y];// - acc_offset[Y];
-    acc[Z] = acc[Z];// - acc_offset[Z];
     gyro[X] = gyro[X] - gyro_offset[X];
     gyro[Y] = gyro[Y] - gyro_offset[Y];
     gyro[Z] = gyro[Z] - gyro_offset[Z];
+}
+
+void read_sensors6() {
+    mpu9150.getMotion6(&acc[0], &acc[1], &acc[2], &gyro[0], &gyro[1], &gyro[2]);
+    gyro[X] = gyro[X] - gyro_offset[X];
+    gyro[Y] = gyro[Y] - gyro_offset[Y];
+    gyro[Z] = gyro[Z] - gyro_offset[Z];
+}
+bool read_sensors() {
+	static uint32_t t_prevmagread = 0;
+	uint32_t t = micros();
+	if(t-t_prevmagread < 125000) {
+		read_sensors6();
+		return false;
+	} else {
+		read_sensors9();
+		t_prevmagread = t;
+		return true;
+	}
+
 }
 
 
@@ -138,7 +155,7 @@ void setup_mpu() {
     delay(1000); 
     mpu9150.initialize();
     
-    read_sensors();
+    read_sensors9();
     acc_offset[X] = acc[X];
     acc_offset[Y] = acc[Y];
     acc_offset[Z] = acc[Z];
@@ -171,7 +188,7 @@ extern "C" int main(void)
     uint16_t output;
     digitalWrite(13, HIGH);
 
-    uint32_t h = 30000;
+    uint32_t h = 10000;
     PIDParameters pidParametersRoll;
     PIDParameters pidParametersPitch;
     PIDParameters pidParametersYaw;
@@ -184,14 +201,19 @@ extern "C" int main(void)
     initParameters(&pidParametersYaw, &pidStateYaw);
     
     Madgwick sensor_fusion;
-    sensor_fusion.begin(1/(h/1000000.0f));
+    sensor_fusion.begindt(h/1000000.0f);
     uint32_t t_start = micros();
     uint32_t t_end = t_start;
     uint32_t dt = 0;
 	while (1) {
             digitalWrite(13, HIGH);
-            read_sensors();
-            sensor_fusion.update(gyro[X]/250.0f, gyro[Y]/250.0f, gyro[Z]/250.0f, acc[X], acc[Y], acc[Z], mag[X], mag[Y], mag[Z]);
+            bool magSample = read_sensors();
+            if(!magSample) {
+                sensor_fusion.updateIMU(gyro[X]/250.0f, gyro[Y]/250.0f, gyro[Z]/250.0f, acc[X], acc[Y], acc[Z]);
+            } else {
+                sensor_fusion.update(gyro[X]/250.0f, gyro[Y]/250.0f, gyro[Z]/250.0f, acc[X], acc[Y], acc[Z], mag[X], mag[Y], mag[Z]);
+            }
+
             serialData.roll = sensor_fusion.getRoll();
             serialData.pitch = sensor_fusion.getPitch();
             serialData.yaw = sensor_fusion.getYaw();
@@ -199,11 +221,12 @@ extern "C" int main(void)
             analogWrite(MOTORPIN, output);
             sendserialData(t_end, dt);
             t_end = micros();
-            dt = t_end - t_start;
+            if(magSample)
+                dt = t_end - t_start;
             digitalWrite(13, LOW);
             /* Fixed sample rate */
             while(micros() - t_start < h);
-            t_start = t_end;
+            t_start = micros();
     }
 }
 

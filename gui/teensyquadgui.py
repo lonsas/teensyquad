@@ -125,7 +125,7 @@ class TeensySerial(QThread):
         teensy_port = tuple()
         for port in ports_avaiable:
             print(port)
-            if port[1].startswith("Teensy") or port[0] == '/dev/ttyACM0' or port[0] == '/dev/ttyACM1':
+            if port[1].startswith("Teensy") or port[0] == '/dev/ttyACM0' or port[0] == '/dev/ttyACM1' or port[0] == '/dev/ttyACM2':
                 teensy_port = port
         if teensy_port:
             return teensy_port
