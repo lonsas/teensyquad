@@ -1,10 +1,6 @@
 #ifndef __SENSOR_FUSION_H
 #define __SENSOR_FUSION_H
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 
 #include "inttypes.h"
 
@@ -23,9 +19,30 @@ typedef struct {
 
 double calculateRoll(SensorData *);
 
-#ifdef __cplusplus
-}
-#endif
-
+class complementary_filter {
+private:
+    int16_t acc[3];
+    int16_t gyro[3];
+    float roll;
+    float pitch;
+    float yaw;
+    float aroll;
+    float apitch;
+    float ayaw;
+    float fabs(float a);
+public:
+    complementary_filter(void);
+    void begin(uint32_t dt);
+    void update(float gx, float gy, float gz, float ax, float ay, float az, float dt);
+    float getRoll() {
+        return roll;
+    }
+    float getPitch() {
+        return pitch;
+    }
+    float getYaw() {
+        return yaw;
+    }
+};
 #endif
 

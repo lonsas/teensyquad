@@ -124,8 +124,11 @@ post_compile: $(TARGET).hex
 
 reboot:
 	@-$(abspath $(TOOLSPATH))/teensy_reboot
+	
+close_uploader:
+	@sleep 2; pkill teensy
 
-upload: post_compile reboot
+upload: post_compile reboot close_uploader
 
 $(BUILDDIR)/%.o: %.c
 	@mkdir -p "$(dir $@)"

@@ -7,6 +7,7 @@
 #include "I2Cdev.h"
 #include "MPU9150.h"
 #include "MadgwickAHRS.h"
+#include "sensor_fusion.h"
 
 #define RADIO_PINS 6
 
@@ -69,9 +70,9 @@ void sendserialData(uint32_t t, uint32_t dt) {
     serialData.acc[0] = acc[0];
     serialData.acc[1] = acc[1];
     serialData.acc[2] = acc[2];
-    serialData.gyro[0] = mag[0];
-    serialData.gyro[1] = mag[1];
-    serialData.gyro[2] = mag[2];
+    serialData.gyro[0] = gyro[0];
+    serialData.gyro[1] = gyro[1];
+    serialData.gyro[2] = gyro[2];
     serialData.t = t;
     serialData.dt = dt;
     if(Serial.dtr()) {
@@ -188,7 +189,7 @@ extern "C" int main(void)
     uint16_t output;
     digitalWrite(13, HIGH);
 
-    uint32_t h = 10000;
+    uint32_t h = 1000;
     PIDParameters pidParametersRoll;
     PIDParameters pidParametersPitch;
     PIDParameters pidParametersYaw;
@@ -200,20 +201,15 @@ extern "C" int main(void)
     initParameters(&pidParametersPitch, &pidStatePitch);
     initParameters(&pidParametersYaw, &pidStateYaw);
     
-    Madgwick sensor_fusion;
-    sensor_fusion.begindt(h/1000000.0f);
+    complementary_filter sensor_fusion;
+
     uint32_t t_start = micros();
     uint32_t t_end = t_start;
     uint32_t dt = 0;
 	while (1) {
             digitalWrite(13, HIGH);
-            bool magSample = read_sensors();
-            if(!magSample) {
-                sensor_fusion.updateIMU(gyro[X]/250.0f, gyro[Y]/250.0f, gyro[Z]/250.0f, acc[X], acc[Y], acc[Z]);
-            } else {
-                sensor_fusion.update(gyro[X]/250.0f, gyro[Y]/250.0f, gyro[Z]/250.0f, acc[X], acc[Y], acc[Z], mag[X], mag[Y], mag[Z]);
-            }
-
+            read_sensors6();
+            sensor_fusion.update(gyro[X]/250.0f, gyro[Y]/250.0f, gyro[Z]/250.0f, acc[X], acc[Y], acc[Z], dt/1000000.0f);
             serialData.roll = sensor_fusion.getRoll();
             serialData.pitch = sensor_fusion.getPitch();
             serialData.yaw = sensor_fusion.getYaw();
@@ -221,8 +217,7 @@ extern "C" int main(void)
             analogWrite(MOTORPIN, output);
             sendserialData(t_end, dt);
             t_end = micros();
-            if(magSample)
-                dt = t_end - t_start;
+            dt = t_end - t_start;
             digitalWrite(13, LOW);
             /* Fixed sample rate */
             while(micros() - t_start < h);
