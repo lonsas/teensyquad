@@ -157,9 +157,6 @@ void setup_mpu() {
     mpu9150.initialize();
     
     read_sensors9();
-    acc_offset[X] = acc[X];
-    acc_offset[Y] = acc[Y];
-    acc_offset[Z] = acc[Z];
     gyro_offset[X] = gyro[X];
     gyro_offset[Y] = gyro[Y];
     gyro_offset[Z] = gyro[Z];
@@ -202,6 +199,8 @@ extern "C" int main(void)
     initParameters(&pidParametersYaw, &pidStateYaw);
     
     complementary_filter sensor_fusion;
+    read_sensors();
+    sensor_fusion.calibrateAngle(acc[X], acc[Y], acc[Z]);
 
     uint32_t t_start = micros();
     uint32_t t_end = t_start;
@@ -209,7 +208,7 @@ extern "C" int main(void)
 	while (1) {
             digitalWrite(13, HIGH);
             read_sensors6();
-            sensor_fusion.update(gyro[X]/250.0f, gyro[Y]/250.0f, gyro[Z]/250.0f, acc[X], acc[Y], acc[Z], dt/1000000.0f);
+            sensor_fusion.update(gyro[X]/250.0f, gyro[Y]/250.0f, gyro[Z]/250.0f, acc[X], acc[Y], acc[Z], h/1000000.0f);
             serialData.roll = sensor_fusion.getRoll();
             serialData.pitch = sensor_fusion.getPitch();
             serialData.yaw = sensor_fusion.getYaw();

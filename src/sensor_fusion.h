@@ -29,6 +29,9 @@ private:
     float aroll;
     float apitch;
     float ayaw;
+    float pitch_offset;
+    float roll_offset;
+    float yaw_offset;
     float fabs(float a);
 public:
     complementary_filter(void);
@@ -43,6 +46,7 @@ public:
     float getYaw() {
         return yaw;
     }
+    void calibrateAngle(float ax, float ay, float az);
 };
 #endif
 
