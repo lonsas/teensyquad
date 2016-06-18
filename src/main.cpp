@@ -179,20 +179,22 @@ extern "C" int main(void)
     bool armed = false;
     bool throttle_off = true;
     while (1) {
-        double roll;
-        double pitch;
-        double yaw;
 
-        double rroll;
-        double rpitch;
-        double ryaw;
-        double rthrottle;
-
-        double croll;
-        double cpitch;
-        double cyaw;
 
         if(armed) {
+            double roll;
+            double pitch;
+            double yaw;
+
+            double rroll;
+            double rpitch;
+            double ryaw;
+            double rthrottle;
+
+            double croll;
+            double cpitch;
+            double cyaw;
+
             digitalWrite(13, HIGH);
             read_sensors6();
             sensor_fusion.update(gyro[X]/250.0l, gyro[Y]/250.0l, gyro[Z]/250.0l, acc[X], acc[Y], acc[Z], h/1000000.0l);
@@ -206,15 +208,17 @@ extern "C" int main(void)
             ryaw = (width[YAW] - 1500) / 500.0;
             rthrottle = (width[THROTTLE] - 1000) / 500.0;
 
-            croll = rollPID.calculateOutput(rroll, roll);
-            cpitch = pitchPID.calculateOutput(rpitch, pitch);
-            cyaw = yawPID.calculateOutput(ryaw, yaw);
-
             double output[4];
-            mix(rthrottle, cpitch, croll, cyaw, output);
-
             if(!throttle_off) {
-                        //TODO: Fix proper output limitation
+                croll = rollPID.calculateOutput(rroll, roll);
+                cpitch = pitchPID.calculateOutput(rpitch, pitch);
+                cyaw = yawPID.calculateOutput(ryaw, yaw);
+
+
+                mix(rthrottle, cpitch, croll, cyaw, output);
+
+
+                //TODO: Fix proper output limitation
                 rollPID.updateState(croll);
                 pitchPID.updateState(cpitch);
                 yawPID.updateState(cyaw);
@@ -225,7 +229,13 @@ extern "C" int main(void)
 
 
 
-
+            serialData.roll = pitch;
+            serialData.pitch = roll;
+            serialData.yaw = yaw;
+            serialData.data[0] = output[0];
+            serialData.data[1] = output[1];
+            serialData.data[2] = output[2];
+            serialData.data[3] = output[3];
         } else {
             digitalWrite(13, LOW);
         }
@@ -252,12 +262,6 @@ extern "C" int main(void)
             throttle_off = false;
         }
 
-        serialData.roll = pitch;
-        serialData.pitch = roll;
-        serialData.yaw = yaw;
-        serialData.data[0] = cpitch;
-        serialData.data[1] = croll;
-        serialData.data[2] = cyaw;
         sendserialData(t_end, dt);
 
         t_end = micros();
