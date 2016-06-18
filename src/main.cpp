@@ -214,6 +214,10 @@ extern "C" int main(void)
             mix(rthrottle, cpitch, croll, cyaw, output);
 
             if(!throttle_off) {
+                        //TODO: Fix proper output limitation
+                rollPID.updateState(croll);
+                pitchPID.updateState(cpitch);
+                yawPID.updateState(cyaw);
                 motors.output(output);
             } else {
                 motors.off();
@@ -221,10 +225,7 @@ extern "C" int main(void)
 
 
 
-            //TODO: Fix proper output limitation
-            rollPID.updateState(croll);
-            pitchPID.updateState(cpitch);
-            yawPID.updateState(cyaw);
+
         } else {
             digitalWrite(13, LOW);
         }
@@ -254,6 +255,9 @@ extern "C" int main(void)
         serialData.roll = pitch;
         serialData.pitch = roll;
         serialData.yaw = yaw;
+        serialData.data[0] = cpitch;
+        serialData.data[1] = croll;
+        serialData.data[2] = cyaw;
         sendserialData(t_end, dt);
 
         t_end = micros();
