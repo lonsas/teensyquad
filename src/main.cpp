@@ -58,22 +58,22 @@ void radio_pw_rise_isr() {
 }
 
 void radio_pw0_isr() {
-        width[0] = micros() - radio_rise;
+    width[0] = micros() - radio_rise;
 }
 void radio_pw1_isr() {
-        width[1] = micros() - radio_rise;
+    width[1] = micros() - radio_rise;
 }
 void radio_pw2_isr() {
-        width[2] = micros() - radio_rise;
+    width[2] = micros() - radio_rise;
 }
 void radio_pw3_isr() {
-        width[3] = micros() - radio_rise;
+    width[3] = micros() - radio_rise;
 }
 void radio_pw4_isr() {
-        width[4] = micros() - radio_rise;
+    width[4] = micros() - radio_rise;
 }
 void radio_pw5_isr() {
-        width[5] = micros() - radio_rise;
+    width[5] = micros() - radio_rise;
 }
 
 void sendserialData(uint32_t t, uint32_t dt) {
@@ -96,7 +96,7 @@ void sendserialData(uint32_t t, uint32_t dt) {
 
 
 void setup_radio() {
-    
+
     pinMode(RADIOPIN_RISE, INPUT);
     for(int i = 0; i < RADIO_PINS; i++) {
         pinMode(RADIOPIN[i], INPUT);
@@ -119,7 +119,7 @@ uint16_t read_16bit_register(uint8_t high) {
     Wire.endTransmission(I2C_STOP);
     Wire.requestFrom(SENSOR_ADDRESS, 1, I2C_STOP);
     result = (Wire.readByte() << 8);
-    
+
     Wire.beginTransmission(SENSOR_ADDRESS);
     Wire.write(high+1);
     Wire.endTransmission(I2C_STOP);
@@ -143,16 +143,16 @@ void read_sensors6() {
     gyro[Z] = gyro[Z] - gyro_offset[Z];
 }
 bool read_sensors() {
-	static uint32_t t_prevmagread = 0;
-	uint32_t t = micros();
-	if(t-t_prevmagread < 125000) {
-		read_sensors6();
-		return false;
-	} else {
-		read_sensors9();
-		t_prevmagread = t;
-		return true;
-	}
+    static uint32_t t_prevmagread = 0;
+    uint32_t t = micros();
+    if(t-t_prevmagread < 125000) {
+        read_sensors6();
+        return false;
+    } else {
+        read_sensors9();
+        t_prevmagread = t;
+        return true;
+    }
 
 }
 
@@ -161,7 +161,7 @@ void setup_mpu() {
     Wire.begin(I2C_MASTER,0x0, I2C_PINS_18_19, I2C_PULLUP_EXT, I2C_RATE_400);
     delay(1000); 
     mpu9150.initialize();
-    
+
     read_sensors9();
     gyro_offset[X] = gyro[X];
     gyro_offset[Y] = gyro[Y];
@@ -177,15 +177,16 @@ extern "C" int main(void)
 {
     setup_radio();
     setup_mpu();
-	pinMode(13, OUTPUT);
+    pinMode(13, OUTPUT);
     digitalWrite(13, HIGH);
 
     uint32_t h = 1000;
     PID rollPID(h/1000000.0);
     PID pitchPID(h/1000000.0);
     PID yawPID(h/1000000.0);
-    
+
     esc_control motors;
+    motors.arm();
 
     complementary_filter sensor_fusion;
     read_sensors();
@@ -194,47 +195,67 @@ extern "C" int main(void)
     uint32_t t_start = micros();
     uint32_t t_end = t_start;
     uint32_t dt = 0;
-	while (1) {
+    bool armed = false;
+    while (1) {
+        if(width[THROTTLE] < 1000) {
+            if(width[AUX1] > 1500) {
+                if(!armed) {
+                    armed = true;
+                    rollPID.resetState();
+                    pitchPID.resetState();
+                    yawPID.resetState();
+                }
+            } else {
+                armed = false;
+            }
+        }
+        if(armed) {
             digitalWrite(13, HIGH);
-            read_sensors6();
-            sensor_fusion.update(gyro[X]/250.0l, gyro[Y]/250.0l, gyro[Z]/250.0l, acc[X], acc[Y], acc[Z], h/1000000.0l);
-            double roll = sensor_fusion.getRoll();
-            double pitch = sensor_fusion.getPitch();
-            double yaw = sensor_fusion.getYaw();
-
-            //Normalize reference
-            double rroll = (width[ROLL] - 1500) / 500.0;
-            double rpitch = (width[PITCH] - 1500) / 500.0;
-            double ryaw = (width[YAW] - 1500) / 500.0;
-            double rthrottle = (width[THROTTLE] - 1000) / 500.0;
-
-            double croll = rollPID.calculateOutput(rroll, roll);
-            double cpitch = pitchPID.calculateOutput(rpitch, pitch);
-            double cyaw = yawPID.calculateOutput(ryaw, yaw);
-
-            double output[4];
-            mix(rthrottle, cpitch, croll, cyaw, output);
-
-            motors.output(output);
-
-
-
-            //TODO: Fix proper output limitation
-            rollPID.updateState(croll);
-            pitchPID.updateState(cpitch);
-            yawPID.updateState(cyaw);
-
-            serialData.roll = cpitch;
-            serialData.pitch = croll;
-            serialData.yaw = cyaw;
-            sendserialData(t_end, dt);
-
-            t_end = micros();
-            dt = t_end - t_start;
+        } else {
             digitalWrite(13, LOW);
-            /* Fixed sample rate */
-            while(micros() - t_start < h);
-            t_start = micros();
+        }
+
+        read_sensors6();
+        sensor_fusion.update(gyro[X]/250.0l, gyro[Y]/250.0l, gyro[Z]/250.0l, acc[X], acc[Y], acc[Z], h/1000000.0l);
+        double roll = sensor_fusion.getRoll();
+        double pitch = sensor_fusion.getPitch();
+        double yaw = sensor_fusion.getYaw();
+
+        //Normalize reference
+        double rroll = (width[ROLL] - 1500) / 500.0;
+        double rpitch = (width[PITCH] - 1500) / 500.0;
+        double ryaw = (width[YAW] - 1500) / 500.0;
+        double rthrottle = (width[THROTTLE] - 1000) / 500.0;
+
+        double croll = rollPID.calculateOutput(rroll, roll);
+        double cpitch = pitchPID.calculateOutput(rpitch, pitch);
+        double cyaw = yawPID.calculateOutput(ryaw, yaw);
+
+        double output[4];
+        mix(rthrottle, cpitch, croll, cyaw, output);
+
+        if(armed) {
+            motors.output(output);
+        }
+
+
+
+        //TODO: Fix proper output limitation
+        rollPID.updateState(croll);
+        pitchPID.updateState(cpitch);
+        yawPID.updateState(cyaw);
+
+        serialData.roll = cpitch;
+        serialData.pitch = croll;
+        serialData.yaw = cyaw;
+        sendserialData(t_end, dt);
+
+        t_end = micros();
+        dt = t_end - t_start;
+
+        /* Fixed sample rate */
+        while(micros() - t_start < h);
+        t_start = micros();
     }
 }
 

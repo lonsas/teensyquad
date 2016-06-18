@@ -69,8 +69,13 @@ void esc_control::output(double *motor) {
     analogWrite(MOTOR3_PIN, motor3_pwm*SCALING);
 }
 
-void esc_control::arm(bool enable) {
-    armed = enable;
+void esc_control::arm() {
+    analogWrite(MOTOR0_PIN, MOTOR_ARM);
+    analogWrite(MOTOR1_PIN, MOTOR_ARM);
+    analogWrite(MOTOR2_PIN, MOTOR_ARM);
+    analogWrite(MOTOR3_PIN, MOTOR_ARM);
+    delay(1000);
+    armed = true;
 }
 
 bool esc_control::is_armed() {

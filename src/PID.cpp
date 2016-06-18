@@ -7,13 +7,13 @@
 
 
 PID::PID(double h) {
-    p.K = 1;
+    p.K = 0.5;
     p.Ti = 10;
     p.Td = 0.1;
     p.N = 10;
     p.b = 1;
     p.h = h;
-    p.Tt = 10;
+    p.Tt = 0.1;
     p.limit = 1;
     setParameters();
     resetState();

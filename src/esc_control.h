@@ -5,7 +5,7 @@
 #ifndef SRC_ESC_CONTROL_H_
 #define SRC_ESC_CONTROL_H_
 
-#define ARM_PWM 960
+#define MOTOR_ARM 960
 #define MOTOR_OFF 960
 #define MOTOR_MAX 2000
 
@@ -24,7 +24,7 @@ private:
 public:
     esc_control();
     void output(double *);
-    void arm(bool);
+    void arm();
     bool is_armed();
 };
 
