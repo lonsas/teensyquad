@@ -1,10 +1,6 @@
 #ifndef __PID_H
 #define __PID_H
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 #include "inttypes.h"
 
 typedef struct PIDParameters {
@@ -35,15 +31,26 @@ typedef struct {
 } Signals;
 
 
-void calculateOutput(PIDParameters *, PIDState *, Signals *, int32_t, int32_t);
-void updateState(PIDParameters *, PIDState *, Signals *, int32_t);
-void setParameters(PIDParameters *);
-void resetState(PIDState *);
-void mix();
+class PID {
+private:
+    //Parameters
+    PIDParameters p;
 
-#ifdef __cplusplus
-}
-#endif
+    //State
+    PIDState s;
+
+
+    //Signals
+
+public:
+    Signals sig;
+    PID(int32_t);
+    int32_t calculateOutput(int32_t, int32_t);
+    void updateState(int32_t);
+    void setParameters();
+    void resetState();
+};
+
 
 #endif
 

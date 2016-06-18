@@ -23,30 +23,29 @@ class complementary_filter {
 private:
     int16_t acc[3];
     int16_t gyro[3];
-    float roll;
-    float pitch;
-    float yaw;
-    float aroll;
-    float apitch;
-    float ayaw;
-    float pitch_offset;
-    float roll_offset;
-    float yaw_offset;
-    float fabs(float a);
+    double roll;
+    double pitch;
+    double yaw;
+    double aroll;
+    double apitch;
+    double ayaw;
+    double pitch_offset;
+    double roll_offset;
+    double yaw_offset;
 public:
     complementary_filter(void);
     void begin(uint32_t dt);
-    void update(float gx, float gy, float gz, float ax, float ay, float az, float dt);
-    float getRoll() {
+    void update(double gx, double gy, double gz, double ax, double ay, double az, double dt);
+    double getRoll() {
         return roll;
     }
-    float getPitch() {
+    double getPitch() {
         return pitch;
     }
-    float getYaw() {
+    double getYaw() {
         return yaw;
     }
-    void calibrateAngle(float ax, float ay, float az);
+    void calibrateAngle(double ax, double ay, double az);
 };
 #endif
 

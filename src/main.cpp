@@ -6,8 +6,11 @@
 #include "PID.h"
 #include "I2Cdev.h"
 #include "MPU9150.h"
-#include "MadgwickAHRS.h"
 #include "sensor_fusion.h"
+#include "mix.h"
+
+#define FIXEDPT_WBITS 4
+#include "fixedptc.h"
 
 #define RADIO_PINS 6
 
@@ -16,6 +19,12 @@
 #define X 0
 #define Y 1
 #define Z 2
+#define ROLL 0
+#define PITCH 1
+#define THROTTLE 2
+#define YAW 3
+#define AUX1 4
+#define AUX2 5
 
 const static uint8_t RADIOPIN[RADIO_PINS] = {3,4,5,6,7,8};
 /* Make sure the RISE pin is on a failsafe signal i.e throttle */
@@ -163,17 +172,7 @@ void setup_mpu() {
 
 }
 
-void initParameters(PIDParameters *p, PIDState *s) {
-    p->K = 1;
-    p->Ti = 1;
-    p->Td = 1;
-    p->N = 1;
-    p->b = 0;
-    p->h = 10000;
-    mix();
-    setParameters(p);
-    resetState(s);
-}
+
 
 
 
@@ -187,16 +186,9 @@ extern "C" int main(void)
     digitalWrite(13, HIGH);
 
     uint32_t h = 1000;
-    PIDParameters pidParametersRoll;
-    PIDParameters pidParametersPitch;
-    PIDParameters pidParametersYaw;
-    PIDState pidStateRoll;
-    PIDState pidStatePitch;
-    PIDState pidStateYaw;
-
-    initParameters(&pidParametersRoll, &pidStateRoll);
-    initParameters(&pidParametersPitch, &pidStatePitch);
-    initParameters(&pidParametersYaw, &pidStateYaw);
+    PID rollPID(h);
+    PID pitchPID(h);
+    PID yawPID(h);
     
     complementary_filter sensor_fusion;
     read_sensors();
@@ -208,13 +200,37 @@ extern "C" int main(void)
 	while (1) {
             digitalWrite(13, HIGH);
             read_sensors6();
-            sensor_fusion.update(gyro[X]/250.0f, gyro[Y]/250.0f, gyro[Z]/250.0f, acc[X], acc[Y], acc[Z], h/1000000.0f);
-            serialData.roll = sensor_fusion.getRoll();
-            serialData.pitch = sensor_fusion.getPitch();
-            serialData.yaw = sensor_fusion.getYaw();
+            sensor_fusion.update(gyro[X]/250.0l, gyro[Y]/250.0l, gyro[Z]/250.0l, acc[X], acc[Y], acc[Z], h/1000000.0l);
+            double roll = sensor_fusion.getRoll();
+            double pitch = sensor_fusion.getPitch();
+            double yaw = sensor_fusion.getYaw();
+
+            //Normalize reference
+            double rroll = (width[ROLL] - 1500) / 1000.0l;
+            double rpitch = (width[PITCH] - 1500) / 1000.0l;
+            double ryaw = (width[YAW] - 1500) / 1000.0l;
+
+            int32_t croll = rollPID.calculateOutput(rroll, roll);
+            int32_t cpitch = pitchPID.calculateOutput(rpitch, pitch);
+            int32_t cyaw = yawPID.calculateOutput(ryaw, yaw);
+
+            mix(width[THROTTLE], cpitch, croll, cyaw);
+
+
             output = width[2]*1.6384;
             analogWrite(MOTORPIN, output);
+
+
+            //TODO: Fix proper output limitation
+            rollPID.updateState(croll);
+            pitchPID.updateState(cpitch);
+            yawPID.updateState(cyaw);
+
+            serialData.roll = roll;
+            serialData.pitch = pitch;
+            serialData.yaw = yaw;
             sendserialData(t_end, dt);
+
             t_end = micros();
             dt = t_end - t_start;
             digitalWrite(13, LOW);
