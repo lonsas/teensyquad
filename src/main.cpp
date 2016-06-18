@@ -8,6 +8,7 @@
 #include "MPU9150.h"
 #include "sensor_fusion.h"
 #include "mix.h"
+#include "esc_control.h"
 
 #define FIXEDPT_WBITS 4
 #include "fixedptc.h"
@@ -29,7 +30,7 @@
 const static uint8_t RADIOPIN[RADIO_PINS] = {3,4,5,6,7,8};
 /* Make sure the RISE pin is on a failsafe signal i.e throttle */
 const static uint8_t RADIOPIN_RISE = 2;
-const static uint8_t MOTORPIN = 23;
+
 
 volatile uint32_t radio_rise = 0;
 volatile uint32_t width[6];
@@ -109,11 +110,7 @@ void setup_radio() {
     attachInterrupt(RADIOPIN[5], radio_pw5_isr, FALLING);
 }
 
-void setup_motor() {
-    pinMode(MOTORPIN, OUTPUT);
-    analogWriteFrequency(MOTORPIN, 400);
-    analogWriteResolution(12);
-}
+
 
 uint16_t read_16bit_register(uint8_t high) {
     uint16_t result;
@@ -179,10 +176,8 @@ void setup_mpu() {
 extern "C" int main(void)
 {
     setup_radio();
-    setup_motor();
     setup_mpu();
 	pinMode(13, OUTPUT);
-    uint16_t output;
     digitalWrite(13, HIGH);
 
     uint32_t h = 1000;
@@ -190,6 +185,8 @@ extern "C" int main(void)
     PID pitchPID(h);
     PID yawPID(h);
     
+    esc_control motors;
+
     complementary_filter sensor_fusion;
     read_sensors();
     sensor_fusion.calibrateAngle(acc[X], acc[Y], acc[Z]);
@@ -206,19 +203,20 @@ extern "C" int main(void)
             double yaw = sensor_fusion.getYaw();
 
             //Normalize reference
-            double rroll = (width[ROLL] - 1500) / 1000.0l;
-            double rpitch = (width[PITCH] - 1500) / 1000.0l;
-            double ryaw = (width[YAW] - 1500) / 1000.0l;
+            double rroll = (width[ROLL] - 1500) / 500.0l;
+            double rpitch = (width[PITCH] - 1500) / 500.0l;
+            double ryaw = (width[YAW] - 1500) / 500.0l;
+            double rthrottle = (width[THROTTLE] - 1000) / 500.0l;
 
-            int32_t croll = rollPID.calculateOutput(rroll, roll);
-            int32_t cpitch = pitchPID.calculateOutput(rpitch, pitch);
-            int32_t cyaw = yawPID.calculateOutput(ryaw, yaw);
+            double croll = rollPID.calculateOutput(rroll, roll);
+            double cpitch = pitchPID.calculateOutput(rpitch, pitch);
+            double cyaw = yawPID.calculateOutput(ryaw, yaw);
 
-            mix(width[THROTTLE], cpitch, croll, cyaw);
+            double output[4];
+            mix(rthrottle, cpitch, croll, cyaw, output);
 
+            motors.output(output);
 
-            output = width[2]*1.6384;
-            analogWrite(MOTORPIN, output);
 
 
             //TODO: Fix proper output limitation

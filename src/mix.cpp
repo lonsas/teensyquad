@@ -5,29 +5,30 @@
 
 
 
-void mix(int32_t throttle, int32_t pitch, int32_t roll, int32_t yaw) {
+void mix(double throttle, double pitch, double roll, double yaw, double *output) {
     /*  ^
      * 0 2
      * 1 3
      */
-    int32_t output[4];
     output[0] = output[1] = output[2] = output[3] = throttle;
 
+    //TODO: Add saturation
+
     /*pitch*/
-    output[0] -= pitch;
-    output[1] += pitch;
-    output[2] -= pitch;
-    output[3] += pitch;
+    output[0] -= pitch/2;
+    output[1] += pitch/2;
+    output[2] -= pitch/2;
+    output[3] += pitch/2;
 
     /*roll*/
-    output[0] += roll;
-    output[1] += roll;
-    output[2] -= roll;
-    output[3] -= roll;
+    output[0] += roll/2;
+    output[1] += roll/2;
+    output[2] -= roll/2;
+    output[3] -= roll/2;
 
     /*yaw*/
-    output[0] += yaw;
-    output[1] -= yaw;
-    output[2] -= yaw;
-    output[3] += yaw;
+    output[0] += yaw/2;
+    output[1] -= yaw/2;
+    output[2] -= yaw/2;
+    output[3] += yaw/2;
 }

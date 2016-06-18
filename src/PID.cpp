@@ -6,19 +6,20 @@
 
 
 
-PID::PID(int32_t h) {
+PID::PID(double h) {
     p.K = 1;
     p.Ti = 1;
     p.Td = 1;
     p.N = 1;
     p.b = 1;
     p.h = h;
+    p.limit = 1;
     setParameters();
     resetState();
 }
 
-int32_t PID::calculateOutput(int32_t ref, int32_t y) {
-    int32_t P = p.K*(p.b * ref - y);
+double PID::calculateOutput(double ref, double y) {
+    double P = p.K*(p.b * ref - y);
     s.D = p.ad * s.D - p.bd * (y - s.oldY);
     sig.v = P + s.I + s.D;
     if(sig.v < -(p.limit)) {
@@ -33,7 +34,7 @@ int32_t PID::calculateOutput(int32_t ref, int32_t y) {
 }
 
 
-void PID::updateState(int32_t u) {
+void PID::updateState(double u) {
     s.I = s.I + p.bi * (sig.ref - sig.y) + p.ar * (u - sig.v);
     s.oldY = sig.y;
 }

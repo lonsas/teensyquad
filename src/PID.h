@@ -4,30 +4,30 @@
 #include "inttypes.h"
 
 typedef struct PIDParameters {
-    int32_t K;
-    int32_t Ti;
-    int32_t Td;
-    int32_t Tt;
-    int32_t N;
-    int32_t b;
-    int32_t h;
-    int32_t limit;
-    int32_t ad, bd, bi, ar;
+    double K;
+    double Ti;
+    double Td;
+    double Tt;
+    double N;
+    double b;
+    double h;
+    double limit;
+    double ad, bd, bi, ar;
 } PIDParameters;
 
 
 typedef struct {
-    int32_t D;
-    int32_t I;
-    int32_t oldY;
+    double D;
+    double I;
+    double oldY;
 } PIDState;
 
 
 typedef struct {
-    int32_t ref;
-    int32_t y;
-    int32_t v;
-    int32_t u;
+    double ref;
+    double y;
+    double v;
+    double u;
 } Signals;
 
 
@@ -44,9 +44,9 @@ private:
 
 public:
     Signals sig;
-    PID(int32_t);
-    int32_t calculateOutput(int32_t, int32_t);
-    void updateState(int32_t);
+    PID(double);
+    double calculateOutput(double, double);
+    void updateState(double);
     void setParameters();
     void resetState();
 };
