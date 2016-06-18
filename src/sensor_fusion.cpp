@@ -16,6 +16,9 @@ complementary_filter::complementary_filter(void) {
     pitch_offset = 0;
     roll_offset = 0;
     yaw_offset = 0;
+    gx_offset = 0;
+    gy_offset = 0;
+    gz_offset = 0;
 
 }
 
@@ -23,6 +26,20 @@ void complementary_filter::calibrateAngle(double ax, double ay, double az) {
     pitch_offset = atan2(ay, az)/PI;
     roll_offset = atan2(ax, az)/PI;
 
+}
+
+void complementary_filter::calibrateGyro(double gx, double gy, double gz) {
+    gx_offset = gx;
+    gy_offset = gy;
+    gz_offset = gz;
+
+}
+
+void complementary_filter::reset(double ax, double ay, double az) {
+    apitch = atan2(ay, az)/PI - pitch_offset;
+    aroll = atan2(ax, az)/PI - roll_offset;
+    aroll = -aroll; //inverted for some reason
+    yaw = 0;
 }
 
 void complementary_filter::update(double gx, double gy, double gz, double ax, double ay, double az, double dt) {

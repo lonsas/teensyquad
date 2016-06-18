@@ -38,8 +38,6 @@ volatile int32_t width[6] = {1500, 1500, 1000, 1500, 1500, 1500};
 int16_t acc[3];
 int16_t gyro[3];
 int16_t mag[3];
-int16_t acc_offset[3];
-int16_t gyro_offset[3];
 
 struct serialData {
     int16_t acc[3];
@@ -131,16 +129,10 @@ uint16_t read_16bit_register(uint8_t high) {
 
 void read_sensors9() {
     mpu9150.getMotion9(&acc[0], &acc[1], &acc[2], &gyro[0], &gyro[1], &gyro[2], &mag[X], &mag[Y], &mag[Z]);
-    gyro[X] = gyro[X] - gyro_offset[X];
-    gyro[Y] = gyro[Y] - gyro_offset[Y];
-    gyro[Z] = gyro[Z] - gyro_offset[Z];
 }
 
 void read_sensors6() {
     mpu9150.getMotion6(&acc[0], &acc[1], &acc[2], &gyro[0], &gyro[1], &gyro[2]);
-    gyro[X] = gyro[X] - gyro_offset[X];
-    gyro[Y] = gyro[Y] - gyro_offset[Y];
-    gyro[Z] = gyro[Z] - gyro_offset[Z];
 }
 bool read_sensors() {
     static uint32_t t_prevmagread = 0;
@@ -162,11 +154,7 @@ void setup_mpu() {
     delay(1000); 
     mpu9150.initialize();
 
-    read_sensors9();
-    gyro_offset[X] = gyro[X];
-    gyro_offset[Y] = gyro[Y];
-    gyro_offset[Z] = gyro[Z];
-
+    read_sensors6();
 }
 
 
@@ -196,54 +184,78 @@ extern "C" int main(void)
     uint32_t t_end = t_start;
     uint32_t dt = 0;
     bool armed = false;
+    bool throttle_off = true;
     while (1) {
-        if(width[THROTTLE] < 1000) {
-            if(width[AUX1] > 1500) {
-                if(!armed) {
-                    armed = true;
-                    rollPID.resetState();
-                    pitchPID.resetState();
-                    yawPID.resetState();
-                }
-            } else {
-                armed = false;
-            }
-        }
+        double roll;
+        double pitch;
+        double yaw;
+
+        double rroll;
+        double rpitch;
+        double ryaw;
+        double rthrottle;
+
+        double croll;
+        double cpitch;
+        double cyaw;
+
         if(armed) {
             digitalWrite(13, HIGH);
+            read_sensors6();
+            sensor_fusion.update(gyro[X]/250.0l, gyro[Y]/250.0l, gyro[Z]/250.0l, acc[X], acc[Y], acc[Z], h/1000000.0l);
+            roll = sensor_fusion.getRoll();
+            pitch = sensor_fusion.getPitch();
+            yaw = sensor_fusion.getYaw();
+
+            //Normalize reference
+            rroll = (width[ROLL] - 1500) / 500.0;
+            rpitch = (width[PITCH] - 1500) / 500.0;
+            ryaw = (width[YAW] - 1500) / 500.0;
+            rthrottle = (width[THROTTLE] - 1000) / 500.0;
+
+            croll = rollPID.calculateOutput(rroll, roll);
+            cpitch = pitchPID.calculateOutput(rpitch, pitch);
+            cyaw = yawPID.calculateOutput(ryaw, yaw);
+
+            double output[4];
+            mix(rthrottle, cpitch, croll, cyaw, output);
+
+            if(!throttle_off) {
+                motors.output(output);
+            } else {
+                motors.off();
+            }
+
+
+
+            //TODO: Fix proper output limitation
+            rollPID.updateState(croll);
+            pitchPID.updateState(cpitch);
+            yawPID.updateState(cyaw);
         } else {
             digitalWrite(13, LOW);
         }
 
-        read_sensors6();
-        sensor_fusion.update(gyro[X]/250.0l, gyro[Y]/250.0l, gyro[Z]/250.0l, acc[X], acc[Y], acc[Z], h/1000000.0l);
-        double roll = sensor_fusion.getRoll();
-        double pitch = sensor_fusion.getPitch();
-        double yaw = sensor_fusion.getYaw();
+        if(width[THROTTLE] < 1000) {
+            if(width[AUX1] > 1800) {
+                if(!armed) {
+                    armed = true;
+                    read_sensors6();
+                    sensor_fusion.reset(acc[X], acc[Y], acc[Z]);
+                    sensor_fusion.calibrateGyro(gyro[X], gyro[Y], gyro[Z]);
+                    rollPID.resetState();
+                    pitchPID.resetState();
+                    yawPID.resetState();
 
-        //Normalize reference
-        double rroll = (width[ROLL] - 1500) / 500.0;
-        double rpitch = (width[PITCH] - 1500) / 500.0;
-        double ryaw = (width[YAW] - 1500) / 500.0;
-        double rthrottle = (width[THROTTLE] - 1000) / 500.0;
-
-        double croll = rollPID.calculateOutput(rroll, roll);
-        double cpitch = pitchPID.calculateOutput(rpitch, pitch);
-        double cyaw = yawPID.calculateOutput(ryaw, yaw);
-
-        double output[4];
-        mix(rthrottle, cpitch, croll, cyaw, output);
-
-        if(armed) {
-            motors.output(output);
+                }
+            } else {
+                armed = false;
+                motors.off();
+            }
+            throttle_off = true;
+        } else {
+            throttle_off = false;
         }
-
-
-
-        //TODO: Fix proper output limitation
-        rollPID.updateState(croll);
-        pitchPID.updateState(cpitch);
-        yawPID.updateState(cyaw);
 
         serialData.roll = cpitch;
         serialData.pitch = croll;

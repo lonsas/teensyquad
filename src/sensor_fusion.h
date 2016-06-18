@@ -32,6 +32,9 @@ private:
     double pitch_offset;
     double roll_offset;
     double yaw_offset;
+    double gx_offset;
+    double gy_offset;
+    double gz_offset;
 public:
     complementary_filter(void);
     void begin(uint32_t dt);
@@ -46,6 +49,8 @@ public:
         return yaw;
     }
     void calibrateAngle(double ax, double ay, double az);
+    void calibrateGyro(double gx, double gy, double gz);
+    void reset(double ax, double ay, double az);
 };
 #endif
 
