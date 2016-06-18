@@ -45,14 +45,14 @@ void complementary_filter::update(float gx, float gy, float gz, float ax, float 
     }
     int32_t forceMagnitudeApprox = sqrt(ax*ax + ay*ay + az*az);
     if (forceMagnitudeApprox > 16600 && forceMagnitudeApprox < 17000) {
-        apitch = atan2(ay, az)/3.14f - pitch_offset;
-        aroll = atan2(ax, az)/3.14f - roll_offset;
-        if(fabs(aroll) < 0.25f && fabs(apitch) < 0.25f) {
-            pitch = 0.98f*pitch + 0.02f*apitch;
-            roll = 0.98f*roll + 0.02f*aroll;
+        if(fabs(roll) < 0.4f || fabs(roll) > 0.6f) {
+            apitch = atan2(ay, az)/3.14f - pitch_offset;
+            pitch = 0.995f*pitch + 0.005f*apitch;
         }
-
-
+        if(fabs(pitch) < 0.4f || fabs(pitch) > 0.6f) {
+            aroll = atan2(ax, az)/3.14f - roll_offset;
+            roll = 0.995f*roll + 0.005f*aroll;
+        }
     }
     //y = (1-hwc)y +hwcx
 }
