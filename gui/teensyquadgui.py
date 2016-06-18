@@ -33,7 +33,6 @@ class TeensyGUI(QtGui.QMainWindow, design.Ui_MainWindow):
         self.setupGraphs()
 
     def setupGraphs(self):
-        self.measurementPlot.setYRange(-2**14, 2**14)
         #self.measurementPlot.setClipToView(True)
         self.measurementPlot.setLimits(yMax=2**15, yMin=-2**15)
 
