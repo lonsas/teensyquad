@@ -8,23 +8,26 @@
 
 PID::PID(double h) {
     p.K = 1;
-    p.Ti = 1;
-    p.Td = 1;
-    p.N = 1;
+    p.Ti = 10;
+    p.Td = 0.1;
+    p.N = 10;
     p.b = 1;
     p.h = h;
+    p.Tt = 10;
     p.limit = 1;
     setParameters();
     resetState();
 }
 
 double PID::calculateOutput(double ref, double y) {
+    sig.ref = ref;
+    sig.y = y;
     double P = p.K*(p.b * ref - y);
     s.D = p.ad * s.D - p.bd * (y - s.oldY);
     sig.v = P + s.I + s.D;
     if(sig.v < -(p.limit)) {
         sig.u = -(p.limit);
-    } else if(sig.v > -(p.limit)) {
+    } else if(sig.v > (p.limit)) {
         sig.u = (p.limit);
     } else {
         sig.u = sig.v;

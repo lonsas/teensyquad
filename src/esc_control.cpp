@@ -7,7 +7,7 @@
 
 
 esc_control::esc_control() {
-    armed = false;
+    armed = true;
 
     pinMode(MOTOR0_PIN, OUTPUT);
     analogWriteFrequency(MOTOR0_PIN, PWM_RATE);
@@ -63,10 +63,10 @@ void esc_control::output(double *motor) {
         motor0_pwm = motor1_pwm = motor2_pwm = motor3_pwm = MOTOR_OFF;
     }
 
-    analogWrite(MOTOR0_PIN, motor0_pwm*PWM_RATE*(2<<PWM_RES));
-    analogWrite(MOTOR1_PIN, motor1_pwm*PWM_RATE*(2<<PWM_RES));
-    analogWrite(MOTOR2_PIN, motor2_pwm*PWM_RATE*(2<<PWM_RES));
-    analogWrite(MOTOR3_PIN, motor3_pwm*PWM_RATE*(2<<PWM_RES));
+    analogWrite(MOTOR0_PIN, motor0_pwm*SCALING);
+    analogWrite(MOTOR1_PIN, motor1_pwm*SCALING);
+    analogWrite(MOTOR2_PIN, motor2_pwm*SCALING);
+    analogWrite(MOTOR3_PIN, motor3_pwm*SCALING);
 }
 
 void esc_control::arm(bool enable) {

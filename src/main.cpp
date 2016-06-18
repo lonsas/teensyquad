@@ -33,7 +33,7 @@ const static uint8_t RADIOPIN_RISE = 2;
 
 
 volatile uint32_t radio_rise = 0;
-volatile uint32_t width[6];
+volatile int32_t width[6] = {1500, 1500, 1000, 1500, 1500, 1500};
 
 int16_t acc[3];
 int16_t gyro[3];
@@ -181,9 +181,9 @@ extern "C" int main(void)
     digitalWrite(13, HIGH);
 
     uint32_t h = 1000;
-    PID rollPID(h);
-    PID pitchPID(h);
-    PID yawPID(h);
+    PID rollPID(h/1000000.0);
+    PID pitchPID(h/1000000.0);
+    PID yawPID(h/1000000.0);
     
     esc_control motors;
 
@@ -203,10 +203,10 @@ extern "C" int main(void)
             double yaw = sensor_fusion.getYaw();
 
             //Normalize reference
-            double rroll = (width[ROLL] - 1500) / 500.0l;
-            double rpitch = (width[PITCH] - 1500) / 500.0l;
-            double ryaw = (width[YAW] - 1500) / 500.0l;
-            double rthrottle = (width[THROTTLE] - 1000) / 500.0l;
+            double rroll = (width[ROLL] - 1500) / 500.0;
+            double rpitch = (width[PITCH] - 1500) / 500.0;
+            double ryaw = (width[YAW] - 1500) / 500.0;
+            double rthrottle = (width[THROTTLE] - 1000) / 500.0;
 
             double croll = rollPID.calculateOutput(rroll, roll);
             double cpitch = pitchPID.calculateOutput(rpitch, pitch);
@@ -224,9 +224,9 @@ extern "C" int main(void)
             pitchPID.updateState(cpitch);
             yawPID.updateState(cyaw);
 
-            serialData.roll = roll;
-            serialData.pitch = pitch;
-            serialData.yaw = yaw;
+            serialData.roll = cpitch;
+            serialData.pitch = croll;
+            serialData.yaw = cyaw;
             sendserialData(t_end, dt);
 
             t_end = micros();

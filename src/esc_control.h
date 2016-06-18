@@ -10,12 +10,13 @@
 #define MOTOR_MAX 2000
 
 #define MOTOR0_PIN ((uint8_t)23)
-#define MOTOR1_PIN ((uint8_t)24)
-#define MOTOR2_PIN ((uint8_t)25)
-#define MOTOR3_PIN ((uint8_t)26)
+#define MOTOR1_PIN ((uint8_t)22)
+#define MOTOR2_PIN ((uint8_t)21)
+#define MOTOR3_PIN ((uint8_t)20)
 
 #define PWM_RES 12
 #define PWM_RATE 400
+#define SCALING (PWM_RATE*(1<<(int32_t)PWM_RES)/1000000.0)
 
 class esc_control {
 private:
