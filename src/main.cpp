@@ -241,8 +241,9 @@ extern "C" int main(void)
                 if(!armed) {
                     armed = true;
                     read_sensors6();
-                    sensor_fusion.reset(acc[X], acc[Y], acc[Z]);
+                    sensor_fusion.calibrateAngle(acc[X], acc[Y], acc[Z]);
                     sensor_fusion.calibrateGyro(gyro[X], gyro[Y], gyro[Z]);
+                    sensor_fusion.reset(acc[X], acc[Y], acc[Z]);
                     rollPID.resetState();
                     pitchPID.resetState();
                     yawPID.resetState();
@@ -257,9 +258,9 @@ extern "C" int main(void)
             throttle_off = false;
         }
 
-        serialData.roll = cpitch;
-        serialData.pitch = croll;
-        serialData.yaw = cyaw;
+        serialData.roll = pitch;
+        serialData.pitch = roll;
+        serialData.yaw = yaw;
         sendserialData(t_end, dt);
 
         t_end = micros();

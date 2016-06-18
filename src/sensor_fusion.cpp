@@ -36,9 +36,9 @@ void complementary_filter::calibrateGyro(double gx, double gy, double gz) {
 }
 
 void complementary_filter::reset(double ax, double ay, double az) {
-    apitch = atan2(ay, az)/PI - pitch_offset;
-    aroll = atan2(ax, az)/PI - roll_offset;
-    aroll = -aroll; //inverted for some reason
+    pitch = atan2(ay, az)/PI - pitch_offset;
+    roll = atan2(ax, az)/PI - roll_offset;
+    roll = -roll; //inverted for some reason
     yaw = 0;
 }
 
