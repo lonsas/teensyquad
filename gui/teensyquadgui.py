@@ -11,12 +11,12 @@ from pyqtgraph.ptime import time
 import pyqtgraph
 
 sensorStruct = Struct("datastruct",
-                    SLInt16("accx"),
-                    SLInt16("accy"),
-                    SLInt16("accz"),
-                    SLInt16("gyrox"),
-                    SLInt16("gyroy"),
-                    SLInt16("gyroz"),
+                      LFloat32("accx"),
+                      LFloat32("accy"),
+                      LFloat32("accz"),
+                      LFloat32("gyrox"),
+                      LFloat32("gyroy"),
+                      LFloat32("gyroz"),
 
                     ULInt32("t"),
                     ULInt32("dt"),

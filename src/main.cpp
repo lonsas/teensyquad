@@ -40,8 +40,7 @@ int16_t gyro[3];
 int16_t mag[3];
 
 struct serialData {
-    int16_t acc[3];
-    int16_t gyro[3];
+    float data[6];
     uint32_t t;
     uint32_t dt;
     float pitch;
@@ -75,12 +74,6 @@ void radio_pw5_isr() {
 }
 
 void sendserialData(uint32_t t, uint32_t dt) {
-    serialData.acc[0] = acc[0];
-    serialData.acc[1] = acc[1];
-    serialData.acc[2] = acc[2];
-    serialData.gyro[0] = gyro[0];
-    serialData.gyro[1] = gyro[1];
-    serialData.gyro[2] = gyro[2];
     serialData.t = t;
     serialData.dt = dt;
     if(Serial.dtr()) {
