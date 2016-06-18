@@ -203,10 +203,11 @@ extern "C" int main(void)
             yaw = sensor_fusion.getYaw();
 
             //Normalize reference
+            //TODO: Error checking on signals
             rroll = (width[ROLL] - 1500) / 500.0;
             rpitch = (width[PITCH] - 1500) / 500.0;
             ryaw = (width[YAW] - 1500) / 500.0;
-            rthrottle = (width[THROTTLE] - 1000) / 500.0;
+            rthrottle = (width[THROTTLE] - 1000) / 1000.0;
 
             double output[4];
             if(!throttle_off) {
@@ -215,7 +216,7 @@ extern "C" int main(void)
                 cyaw = yawPID.calculateOutput(ryaw, yaw);
 
 
-                mix(rthrottle, cpitch, croll, cyaw, output);
+                mix(rthrottle, &cpitch, &croll, &cyaw, output);
 
 
                 //TODO: Fix proper output limitation
@@ -240,6 +241,7 @@ extern "C" int main(void)
             digitalWrite(13, LOW);
         }
 
+        //Throttle off
         if(width[THROTTLE] < 1000) {
             if(width[AUX1] > 1800) {
                 if(!armed) {
