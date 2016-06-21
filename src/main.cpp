@@ -27,6 +27,8 @@
 #define AUX1 4
 #define AUX2 5
 
+#define GYROSCALE (250.0/(1<<15))
+
 const static uint8_t RADIOPIN[RADIO_PINS] = {3,4,5,6,7,8};
 /* Make sure the RISE pin is on a failsafe signal i.e throttle */
 const static uint8_t RADIOPIN_RISE = 2;
@@ -180,7 +182,7 @@ extern "C" int main(void)
     bool throttle_off = true;
     while (1) {
 
-
+        armed = true;
         if(armed) {
             double roll;
             double pitch;
@@ -197,7 +199,7 @@ extern "C" int main(void)
 
             digitalWrite(13, HIGH);
             read_sensors6();
-            sensor_fusion.update(gyro[X]/250.0l, gyro[Y]/250.0l, gyro[Z]/250.0l, acc[X], acc[Y], acc[Z], h/1000000.0l);
+            sensor_fusion.update(gyro[X]*GYROSCALE, gyro[Y]*GYROSCALE, gyro[Z]*GYROSCALE, acc[X], acc[Y], acc[Z]);
             roll = sensor_fusion.getRoll();
             pitch = sensor_fusion.getPitch();
             yaw = sensor_fusion.getYaw();
