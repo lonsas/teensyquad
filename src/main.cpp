@@ -9,6 +9,7 @@
 #include "sensor_fusion.h"
 #include "mix.h"
 #include "esc_control.h"
+#include "MadgwickAHRS.h"
 
 #define FIXEDPT_WBITS 4
 #include "fixedptc.h"
@@ -171,9 +172,9 @@ extern "C" int main(void)
     esc_control motors;
     motors.arm();
 
-    complementary_filter sensor_fusion;
+    Madgwick sensor_fusion;
     read_sensors();
-    sensor_fusion.calibrateAngle(acc[X], acc[Y], acc[Z]);
+    sensor_fusion.begindt(h/1000000.0);
 
     uint32_t t_start = micros();
     uint32_t t_end = t_start;
@@ -199,10 +200,10 @@ extern "C" int main(void)
 
             digitalWrite(13, HIGH);
             read_sensors6();
-            sensor_fusion.update(gyro[X]*GYROSCALE, gyro[Y]*GYROSCALE, gyro[Z]*GYROSCALE, acc[X], acc[Y], acc[Z]);
-            roll = sensor_fusion.getRoll();
-            pitch = sensor_fusion.getPitch();
-            yaw = sensor_fusion.getYaw();
+            sensor_fusion.updateIMU(gyro[X]*GYROSCALE, gyro[Y]*GYROSCALE, gyro[Z]*GYROSCALE, acc[X], acc[Y], acc[Z]);
+            roll = sensor_fusion.getRollRadians()/PI;
+            pitch = sensor_fusion.getPitchRadians()/PI;
+            yaw = sensor_fusion.getYawRadians()/PI;
 
             //Normalize reference
             //TODO: Error checking on signals
@@ -235,10 +236,10 @@ extern "C" int main(void)
             serialData.roll = pitch;
             serialData.pitch = roll;
             serialData.yaw = yaw;
-            serialData.data[0] = output[0];
-            serialData.data[1] = output[1];
-            serialData.data[2] = output[2];
-            serialData.data[3] = output[3];
+            serialData.data[0] = acc[X];
+            serialData.data[1] = acc[Y];
+            serialData.data[2] = acc[Z];
+            serialData.data[3] = 0;
         } else {
             digitalWrite(13, LOW);
         }
@@ -249,9 +250,9 @@ extern "C" int main(void)
                 if(!armed) {
                     armed = true;
                     read_sensors6();
-                    sensor_fusion.calibrateAngle(acc[X], acc[Y], acc[Z]);
-                    sensor_fusion.calibrateGyro(gyro[X], gyro[Y], gyro[Z]);
-                    sensor_fusion.reset(acc[X], acc[Y], acc[Z]);
+ //                   sensor_fusion.calibrateAngle(acc[X], acc[Y], acc[Z]);
+ //                   sensor_fusion.calibrateGyro(gyro[X], gyro[Y], gyro[Z]);
+ //                   sensor_fusion.reset(acc[X], acc[Y], acc[Z]);
                     rollPID.resetState();
                     pitchPID.resetState();
                     yawPID.resetState();
