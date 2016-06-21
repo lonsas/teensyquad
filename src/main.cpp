@@ -28,7 +28,21 @@
 #define AUX1 4
 #define AUX2 5
 
-#define GYROSCALE (250.0/(1<<15))
+#define GYROMAX 250.0
+#define GYROSCALE (GYROMAX/(1<<15))
+
+static inline bool isHigh(double x) {
+    return(x > 0.9);
+}
+static inline bool isCenter(double x) {
+    return(x > -0.1 && x < 0.1);
+}
+static inline bool isLow(double x) {
+    return(x < -0.9);
+}
+static inline bool isOff(double x) {
+    return(x < -1);
+}
 
 const static uint8_t RADIOPIN[RADIO_PINS] = {3,4,5,6,7,8};
 /* Make sure the RISE pin is on a failsafe signal i.e throttle */
@@ -106,6 +120,8 @@ void setup_radio() {
 
 
 
+
+
 uint16_t read_16bit_register(uint8_t high) {
     uint16_t result;
     Wire.beginTransmission(SENSOR_ADDRESS);
@@ -130,6 +146,24 @@ void read_sensors9() {
 void read_sensors6() {
     mpu9150.getMotion6(&acc[0], &acc[1], &acc[2], &gyro[0], &gyro[1], &gyro[2]);
 }
+
+double pitch_offset;
+double roll_offset;
+void calibrateAngle(int ax, int ay, int az) {
+    pitch_offset = atan2(ay, az)/PI;
+    roll_offset = atan2(ax, az)/PI;
+
+}
+double gx_offset;
+double gy_offset;
+double gz_offset;
+void calibrateGyro(int gx, int gy, int gz) {
+    gx_offset = gx;
+    gy_offset = gy;
+    gz_offset = gz;
+
+}
+
 bool read_sensors() {
     static uint32_t t_prevmagread = 0;
     uint32_t t = micros();
@@ -153,9 +187,15 @@ void setup_mpu() {
     read_sensors6();
 }
 
+void blink(int n, int time) {
+    for(int i = 0; i < n; i++) {
+        digitalWrite(13, HIGH);
+        delay(time);
+        digitalWrite(13, LOW);
+        delay(time);
+    }
 
-
-
+}
 
 extern "C" int main(void)
 {
@@ -165,25 +205,35 @@ extern "C" int main(void)
     digitalWrite(13, HIGH);
 
     uint32_t h = 1000;
-    PID rollPID(h/1000000.0);
-    PID pitchPID(h/1000000.0);
-    PID yawPID(h/1000000.0);
+    double hseconds = h/1000000.0;
+    PID rollPID(hseconds);
+    PID pitchPID(hseconds);
+    PID yawPID(hseconds);
 
     esc_control motors;
     motors.arm();
 
     Madgwick sensor_fusion;
     read_sensors();
-    sensor_fusion.begindt(h/1000000.0);
+    sensor_fusion.begindt(hseconds);
 
     uint32_t t_start = micros();
     uint32_t t_end = t_start;
     uint32_t dt = 0;
     bool armed = false;
-    bool throttle_off = true;
-    while (1) {
 
-        armed = true;
+    double ryaw = 0;
+    while (1) {
+        //Normalize reference
+        //TODO: Error checking on signals
+        double ch[RADIO_PINS];
+        ch[ROLL] = (width[ROLL] - 1500) / 500.0;
+        ch[PITCH] = (width[PITCH] - 1500) / 500.0;
+        ch[YAW] = (width[YAW] - 1500) / 500.0;
+        ch[THROTTLE] = (width[THROTTLE] - 1500) / 500.0;
+        ch[AUX1] = (width[AUX1] - 1500) / 500.0;
+        ch[AUX2] = (width[AUX2] - 1500) / 500.0;
+//        armed = true;
         if(armed) {
             double roll;
             double pitch;
@@ -191,7 +241,7 @@ extern "C" int main(void)
 
             double rroll;
             double rpitch;
-            double ryaw;
+
             double rthrottle;
 
             double croll;
@@ -205,15 +255,15 @@ extern "C" int main(void)
             pitch = sensor_fusion.getPitchRadians()/PI;
             yaw = sensor_fusion.getYawRadians()/PI;
 
-            //Normalize reference
-            //TODO: Error checking on signals
-            rroll = (width[ROLL] - 1500) / 500.0;
-            rpitch = (width[PITCH] - 1500) / 500.0;
-            ryaw = (width[YAW] - 1500) / 500.0;
-            rthrottle = (width[THROTTLE] - 1000) / 1000.0;
+            rthrottle = ch[THROTTLE]*2 - 1;
+            rroll = ch[ROLL];
+            rpitch = ch[PITCH];
+            ryaw += ch[YAW]*hseconds;
+
 
             double output[4];
-            if(!throttle_off) {
+            //TODO: Implement air-mode where things still happen when throttle is off
+            if(!isOff(ch[THROTTLE])) {
                 croll = rollPID.calculateOutput(rroll, roll);
                 cpitch = pitchPID.calculateOutput(rpitch, pitch);
                 cyaw = yawPID.calculateOutput(ryaw, yaw);
@@ -236,36 +286,52 @@ extern "C" int main(void)
             serialData.roll = pitch;
             serialData.pitch = roll;
             serialData.yaw = yaw;
-            serialData.data[0] = acc[X];
-            serialData.data[1] = acc[Y];
-            serialData.data[2] = acc[Z];
+            serialData.data[0] = ryaw;
+            serialData.data[1] = rpitch;
+            serialData.data[2] = rroll;
             serialData.data[3] = 0;
-        } else {
-            digitalWrite(13, LOW);
-        }
 
-        //Throttle off
-        if(width[THROTTLE] < 1000) {
-            if(width[AUX1] > 1800) {
-                if(!armed) {
-                    armed = true;
-                    read_sensors6();
- //                   sensor_fusion.calibrateAngle(acc[X], acc[Y], acc[Z]);
- //                   sensor_fusion.calibrateGyro(gyro[X], gyro[Y], gyro[Z]);
- //                   sensor_fusion.reset(acc[X], acc[Y], acc[Z]);
-                    rollPID.resetState();
-                    pitchPID.resetState();
-                    yawPID.resetState();
-
-                }
-            } else {
+            //Input logic
+            if(isOff(ch[THROTTLE]) && isLow(ch[AUX1])) {
                 armed = false;
-                motors.off();
             }
-            throttle_off = true;
-        } else {
-            throttle_off = false;
+        } else { //Unarmed, wait input logic
+            digitalWrite(13, LOW);
+
+            /* Using gotos to make sure only one command is registered
+             * This makes it easy so that we do not need to send/make global all objects
+             * that possibly needs changing.
+             * Sample time may be broken here for confirmation and more advanced inputs
+             */
+
+            // Arm
+            if(isOff(ch[THROTTLE]) && isHigh(ch[AUX1])) {
+                armed = true;
+                rollPID.resetState();
+                pitchPID.resetState();
+                yawPID.resetState();
+
+                blink(2, 100);
+                goto INPUT_DONE;
+            }
+
+            // Calibrate
+            if(isLow(ch[PITCH]) && isLow(ch[ROLL])) {
+                read_sensors6();
+                calibrateAngle(acc[X], acc[Y], acc[Z]);
+                calibrateGyro(gyro[X], gyro[Y], gyro[Z]);
+
+
+                blink(5, 100);
+                goto INPUT_DONE;
+            }
+
+
         }
+        INPUT_DONE:
+
+
+
 
         sendserialData(t_end, dt);
 
