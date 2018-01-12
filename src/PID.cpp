@@ -2,58 +2,111 @@
  *
  * */
 #include "PID.h"
-#include "inttypes.h"
 
+typedef struct {
+    double K;
+    double b;
+    double limit;
+    double ad;
+    double bd;
+    double bi;
+    double ar;
+} PidInternalParameters;
 
+typedef struct {
+    double D;
+    double I;
+    double oldY;
+    double u;
+} PidState;
 
-PID::PID(double h) {
-    p.K = 0.5;
-    p.Ti = 10;
-    p.Td = 0.1;
-    p.N = 10;
-    p.b = 1;
-    p.h = h;
-    p.Tt = 0.1;
-    p.limit = 1;
-    setParameters();
-    resetState();
-}
+struct Pid {
+    PidInternalParameters tParameters;
+    PidState tState;
+};
 
-double PID::calculateOutput(double ref, double y) {
-    sig.ref = ref;
-    sig.y = y;
-    double P = p.K*(p.b * ref - y);
-    s.D = p.ad * s.D - p.bd * (y - s.oldY);
-    sig.v = P + s.I + s.D;
-    if(sig.v < -(p.limit)) {
-        sig.u = -(p.limit);
-    } else if(sig.v > (p.limit)) {
-        sig.u = (p.limit);
+/* Precalculates some recurring values in the parameter set
+ * ptParameters the parameter set that should be configured
+ */
+static PidInternalParameters tCalculateParameters(PidParameters ptParameters);
+
+Pid tPidSetup(PidParameters tParameters)
+{
+    Pid tPid;
+    tPid.tParameters = tCalculateParameters(tParameters);
+    resetState(&tPid);
+    return tPid;
+} 
+
+double dbCalculateOutput(Pid * ptPid, double ref, double y) {
+    double dbP;
+    double dbD;
+    double dbOutput;
+    double dbOutputSat;
+    PidState * tState;
+    PidInternalParameters * tParameters;
+    
+    tState = &(ptPid->tState);
+    tParameters = &(ptPid->tParameters);
+
+    /* Calculate */
+    dbP = tParameters->K * (tParameters->b * ref - y);
+    dbD = tParameters->ad * tState->D - \
+          tParameters->bd * (y - tState->oldY);
+    dbOutput = dbP + tState->I + dbD;
+
+    /* Save state */
+    tState->D = dbD;
+    tState->u = dbOutput;
+
+    if(dbOutput > tParameters->limit) {
+        dbOutputSat = tParameters->limit;
+    } else if(dbOutput < -tParameters->limit) {
+        dbOutputSat = -tParameters->limit;
     } else {
-        sig.u = sig.v;
+        dbOutputSat = dbOutput;
     }
-    return sig.u;
-
+    return dbOutputSat;
 }
 
 
-void PID::updateState(double u) {
-    s.I = s.I + p.bi * (sig.ref - sig.y) + p.ar * (u - sig.v);
-    s.oldY = sig.y;
+void updateState(Pid * ptPid, double ref, double y, double u) {
+    ptPid->tState.I += ptPid->tParameters.bi * (ref - y) + \
+                      ptPid->tParameters.ar * (ptPid->tState.u - u);
+    ptPid->tState.oldY = y;
 }
 
-void PID::resetState() {
-    s.I = 0;
-    s.D = 0;
-    s.oldY = 0;
+void resetState(Pid * ptPid) {
+    ptPid->tState.I = 0;
+    ptPid->tState.D = 0;
+    ptPid->tState.oldY = 0;
+    ptPid->tState.u = 0;
 }
 
 
-void PID::setParameters() {
-    p.ad = p.Td / (p.Td + p.N * p.h);
-    p.bd = p.K * p.N * p.ad;
-    p.bi = p.K * p.h / p.Ti;
-    p.ar = p.h / p.Tt;
+PidInternalParameters tCalculateParameters(PidParameters ptParameters) {
+    double ad;
+    double bd;
+    double bi;
+    double ar;
+    PidInternalParameters tPidInternalParameters;
+
+    ad = ptParameters.Td / \
+                       (ptParameters.Td + ptParameters.N * ptParameters.h);
+    bd = ptParameters.K * ptParameters.N * ad;
+    bi = ptParameters.K * ptParameters.h / ptParameters.Ti;
+    ar = ptParameters.h / ptParameters.Tt;
+
+
+    tPidInternalParameters.ad = ad;
+    tPidInternalParameters.bd = bd;
+    tPidInternalParameters.bi = bi;
+    tPidInternalParameters.ar = ar;
+    tPidInternalParameters.K = ptParameters.K;
+    tPidInternalParameters.b = ptParameters.b;
+    tPidInternalParameters.limit = ptParameters.limit;
+
+    return tPidInternalParameters;
 }
     
 

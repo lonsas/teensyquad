@@ -1,56 +1,39 @@
-#ifndef __PID_H
-#define __PID_H
+#ifndef PID_H
+#define PID_H
 
-#include "inttypes.h"
+#include "PID_types.h"
 
-typedef struct PIDParameters {
-    double K;
-    double Ti;
-    double Td;
-    double Tt;
-    double N;
-    double b;
-    double h;
-    double limit;
-    double ad, bd, bi, ar;
-} PIDParameters;
+struct Pid;
+//typedef struct Pid Pid;
 
+/* Create Pid object 
+ *
+ * tParameters parameter set to be used
+ * returns configured Pid struct
+ */
+extern Pid tPidSetup(const PidParameters tParameters);
 
-typedef struct {
-    double D;
-    double I;
-    double oldY;
-} PIDState;
+/* Calculate to output
+ * ptPid Pid struct to use
+ * ref referece value
+ * y measured value
+ *
+ * returns control signal
+ */
+extern double dbCalculateOutput(Pid * ptPid, double ref, double y);
 
+/* Updates the Pid state
+ * ptPid Pid struct to use
+ * ref reference value
+ * y measured value
+ * u controlled value (final saturated value)
+ */
+extern void updateState(Pid * ptPid, double ref, double y, double u);
 
-typedef struct {
-    double ref;
-    double y;
-    double v;
-    double u;
-} Signals;
+/* Resets the Pid state
+ * ptPid the Pid whose state to reset
+ */
+extern void resetState(Pid * ptPid);
 
-
-class PID {
-private:
-    //Parameters
-    PIDParameters p;
-
-    //State
-    PIDState s;
-
-
-    //Signals
-
-public:
-    Signals sig;
-    PID(double);
-    double calculateOutput(double, double);
-    void updateState(double);
-    void setParameters();
-    void resetState();
-};
-
-
-#endif
+#endif /* PID_H */
 
