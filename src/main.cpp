@@ -250,23 +250,34 @@ extern "C" int main(void)
 
             digitalWrite(13, HIGH);
             read_sensors6();
-            sensor_fusion.updateIMU(gyro[X]*GYROSCALE, gyro[Y]*GYROSCALE, gyro[Z]*GYROSCALE, acc[X], acc[Y], acc[Z]);
+
+            double gyrox = gyro[X]*GYROSCALE;
+            double gyroy = gyro[Y]*GYROSCALE;
+            double gyroz = gyro[Z]*GYROSCALE;
+
+            double gyrox_scaled = gyrox/360;
+            double gyroy_scaled = gyroy/360;
+            double gyroz_scaled = gyroz/360;
+
+            sensor_fusion.updateIMU(gyrox, gyroy, gyroz, acc[X], acc[Y], acc[Z]);
             roll = sensor_fusion.getRollRadians()/PI;
             pitch = sensor_fusion.getPitchRadians()/PI;
             yaw = sensor_fusion.getYawRadians()/PI;
 
-            rthrottle = ch[THROTTLE]*2 - 1;
+            rthrottle = (ch[THROTTLE] + 1)/2;
             rroll = ch[ROLL];
             rpitch = ch[PITCH];
-            ryaw += ch[YAW]*hseconds;
+            ryaw = ch[YAW];
 
 
             double output[4];
             //TODO: Implement air-mode where things still happen when throttle is off
             if(!isOff(ch[THROTTLE])) {
-                croll = rollPID.calculateOutput(rroll, roll);
-                cpitch = pitchPID.calculateOutput(rpitch, pitch);
-                cyaw = yawPID.calculateOutput(ryaw, yaw);
+                croll = rollPID.calculateOutput(rroll, gyrox_scaled);
+                cpitch = pitchPID.calculateOutput(rpitch, gyroy_scaled);
+                cyaw = yawPID.calculateOutput(ryaw, gyroz_scaled);
+
+
 
 
                 mix(rthrottle, &cpitch, &croll, &cyaw, output);
@@ -283,13 +294,13 @@ extern "C" int main(void)
 
 
 
-            serialData.roll = pitch;
-            serialData.pitch = roll;
-            serialData.yaw = yaw;
-            serialData.data[0] = ryaw;
-            serialData.data[1] = rpitch;
-            serialData.data[2] = rroll;
-            serialData.data[3] = 0;
+            serialData.roll = gyrox_scaled;
+            serialData.pitch = gyroy_scaled;
+            serialData.yaw = gyroz_scaled;
+            serialData.data[0] = output[0];
+            serialData.data[1] = output[1];
+            serialData.data[2] = output[2];
+            serialData.data[3] = output[3];
 
             //Input logic
             if(isOff(ch[THROTTLE]) && isLow(ch[AUX1])) {
@@ -312,18 +323,13 @@ extern "C" int main(void)
                 yawPID.resetState();
 
                 blink(2, 100);
-                goto INPUT_DONE;
-            }
-
-            // Calibrate
-            if(isLow(ch[PITCH]) && isLow(ch[ROLL])) {
+            } else if(isLow(ch[PITCH]) && isLow(ch[ROLL])) {
                 read_sensors6();
                 calibrateAngle(acc[X], acc[Y], acc[Z]);
                 calibrateGyro(gyro[X], gyro[Y], gyro[Z]);
 
 
                 blink(5, 100);
-                goto INPUT_DONE;
             }
 
 
