@@ -3,9 +3,6 @@
 
 #include "PID_types.h"
 
-struct Pid;
-//typedef struct Pid Pid;
-
 /* Create Pid object 
  *
  * tParameters parameter set to be used

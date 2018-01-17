@@ -3,28 +3,6 @@
  * */
 #include "PID.h"
 
-typedef struct {
-    double K;
-    double b;
-    double limit;
-    double ad;
-    double bd;
-    double bi;
-    double ar;
-} PidInternalParameters;
-
-typedef struct {
-    double D;
-    double I;
-    double oldY;
-    double u;
-} PidState;
-
-struct Pid {
-    PidInternalParameters tParameters;
-    PidState tState;
-};
-
 /* Precalculates some recurring values in the parameter set
  * ptParameters the parameter set that should be configured
  */
