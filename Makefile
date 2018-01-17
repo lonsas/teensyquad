@@ -44,6 +44,8 @@ LIBRARYPATH = libraries
 # path location for the arm-none-eabi compiler
 COMPILERPATH = $(TOOLSPATH)/arm/bin
 
+TESTPATH = tests
+
 #************************************************************************
 # Settings below this point usually do not need to be edited
 #************************************************************************
@@ -98,6 +100,8 @@ CXX = $(abspath $(COMPILERPATH))/arm-none-eabi-g++
 OBJCOPY = $(abspath $(COMPILERPATH))/arm-none-eabi-objcopy
 SIZE = $(abspath $(COMPILERPATH))/arm-none-eabi-size
 
+
+
 # automatically create lists of the sources and objects
 LC_FILES := $(wildcard $(LIBRARYPATH)/*/*.c)
 LCPP_FILES := $(wildcard $(LIBRARYPATH)/*/*.cpp)
@@ -106,13 +110,24 @@ TCPP_FILES := $(wildcard $(COREPATH)/*.cpp)
 C_FILES := $(wildcard src/*.c)
 CPP_FILES := $(wildcard src/*.cpp)
 INO_FILES := $(wildcard src/*.ino)
+TESTC_FILES := $(wildcard $(TESTPATH)/*.c)
+TESTCPP_FILES := $(wildcard $(TESTPATH)/*.cpp)
+
 
 # include paths for libraries
-L_INC = -I$(LIBRARYPATH)
+L_INC = -Isrc
+L_INC += -I$(LIBRARYPATH)
 L_INC += $(foreach lib,$(filter %/, $(wildcard $(LIBRARYPATH)/*/)), -I$(lib))
 
 SOURCES := $(C_FILES:.c=.o) $(CPP_FILES:.cpp=.o) $(INO_FILES:.ino=.o) $(TC_FILES:.c=.o) $(TCPP_FILES:.cpp=.o) $(LC_FILES:.c=.o) $(LCPP_FILES:.cpp=.o)
 OBJS := $(foreach src,$(SOURCES), $(BUILDDIR)/$(src))
+
+TESTABLESOURCES = src/PID.o
+TESTABLEOBJS := $(foreach src,$(TESTABLESOURCES), $(BUILDDIR)/$(src))
+
+TESTSOURCES = $(TESTC_FILES:.c=.o)
+TESTOBJS := $(foreach src,$(TESTSOURCES), $(BUILDDIR)/$(src))
+
 
 all: hex
 
@@ -130,6 +145,18 @@ close_uploader:
 	@sleep 2; pkill teensy
 
 upload: post_compile reboot close_uploader
+
+test: CC = gcc
+test: CPPFLAGS = -Wall
+test: CXXFLAGS = $(CPPFLAGS)
+test: LDFLAGS = -lcheck
+test: testbuild
+	$(BUILDDIR)/test
+
+
+testbuild: $(TESTOBJS) $(TESTABLEOBJS)
+	$(CC) $(LDFLAGS) -o $(BUILDDIR)/test $(TESTOBJS) $(TESTABLEOBJS)
+
 
 $(BUILDDIR)/%.o: %.c
 	@mkdir -p "$(dir $@)"
