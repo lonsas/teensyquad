@@ -16,7 +16,8 @@ Pid tPidSetup(PidParameters tParameters)
     return tPid;
 } 
 
-double dbCalculateOutput(Pid * ptPid, double ref, double y) {
+double dbCalculateOutput(Pid * ptPid, double ref, double y)
+{
     double dbP;
     double dbD;
     double dbOutput;
@@ -30,12 +31,14 @@ double dbCalculateOutput(Pid * ptPid, double ref, double y) {
     /* Calculate */
     dbP = tParameters->K * (tParameters->b * ref - y);
     dbD = tParameters->ad * tState->D - \
-          tParameters->bd * (y - tState->oldY);
+          tParameters->bd * (y - tState->y);
     dbOutput = dbP + tState->I + dbD;
 
     /* Save state */
     tState->D = dbD;
     tState->u = dbOutput;
+    tState->ref = ref;
+    tState->y = y;
 
     if(dbOutput > tParameters->limit) {
         dbOutputSat = tParameters->limit;
@@ -48,32 +51,62 @@ double dbCalculateOutput(Pid * ptPid, double ref, double y) {
 }
 
 
-void updateState(Pid * ptPid, double ref, double y, double u) {
-    ptPid->tState.I += ptPid->tParameters.bi * (ref - y) + \
-                      ptPid->tParameters.ar * (ptPid->tState.u - u);
-    ptPid->tState.oldY = y;
+void updateState(Pid * ptPid, double u)
+{
+    /* Forward approximation */
+    ptPid->tState.I += ptPid->tParameters.bi * (ptPid->tState.ref - ptPid->tState.y) + \
+                      ptPid->tParameters.ar * (u - ptPid->tState.u);
 }
 
-void resetState(Pid * ptPid) {
+double dbCalculateAndUpdate(Pid * pPid, double ref, double y, double old_u)
+{
+    /* Update the state before to be able to get the saturated control signal */
+    updateState(pPid, old_u);
+    return dbCalculateOutput(pPid, ref, y);
+}
+
+
+void resetState(Pid * ptPid)
+{
     ptPid->tState.I = 0;
     ptPid->tState.D = 0;
-    ptPid->tState.oldY = 0;
+    ptPid->tState.y = 0;
     ptPid->tState.u = 0;
+    ptPid->tState.ref = 0;
 }
 
 
-PidInternalParameters tCalculateParameters(PidParameters ptParameters) {
+PidInternalParameters tCalculateParameters(PidParameters ptParameters)
+{
     double ad;
     double bd;
     double bi;
     double ar;
     PidInternalParameters tPidInternalParameters;
+    
+    /* Protect against division by zero if Td is not set */
+    double ad_div = ptParameters.Td + ptParameters.N * ptParameters.h;
+    if(ad_div != 0) {
+        ad = ptParameters.Td / ad_div;
+    } else {
+        ad = 0;
+    }
 
-    ad = ptParameters.Td / \
-                       (ptParameters.Td + ptParameters.N * ptParameters.h);
     bd = ptParameters.K * ptParameters.N * ad;
-    bi = ptParameters.K * ptParameters.h / ptParameters.Ti;
-    ar = ptParameters.h / ptParameters.Tt;
+
+    /* Protect against division by zero, Ti == 0 is the same as Ti == inf */
+    if(ptParameters.Ti != 0) {
+        bi = ptParameters.K * ptParameters.h / ptParameters.Ti;
+    } else {
+        bi = 0;
+    }
+
+    /* Protect against division by zero, Tt == 0 is the same as Tt == inf */
+    if(ptParameters.Tt != 0) {
+        ar = ptParameters.h / ptParameters.Tt;
+    } else {
+        ar = 0;
+    }
 
 
     tPidInternalParameters.ad = ad;

@@ -21,11 +21,19 @@ extern double dbCalculateOutput(Pid * ptPid, double ref, double y);
 
 /* Updates the Pid state
  * ptPid Pid struct to use
- * ref reference value
- * y measured value
  * u controlled value (final saturated value)
  */
-extern void updateState(Pid * ptPid, double ref, double y, double u);
+extern void updateState(Pid * ptPid, double u);
+
+/* Updates the Pid state and calculates the control value
+ * pPid Pid struct to use
+ * ref reference value
+ * y measured value
+ * old_u previously controlled u (for tracking)
+ *
+ * returns control signal
+ */
+double dbCalculateAndUpdate(Pid * pPid, double ref, double y, double old_u);
 
 /* Resets the Pid state
  * ptPid the Pid whose state to reset

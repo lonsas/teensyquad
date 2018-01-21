@@ -25,8 +25,9 @@ typedef struct {
 typedef struct {
     double D;
     double I;
-    double oldY;
+    double y;
     double u;
+    double ref;
 } PidState;
 
 typedef struct {
