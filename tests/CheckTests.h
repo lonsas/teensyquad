@@ -2,4 +2,5 @@
 
 Suite * CoreSuite(void);
 Suite * PidSuite(void);
+Suite * GyroControlSuite(void);
 

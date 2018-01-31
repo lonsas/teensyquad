@@ -2,6 +2,7 @@
  *
  * */
 #include "PID.h"
+#include <float.h>
 
 /* Precalculates some recurring values in the parameter set
  * ptParameters the parameter set that should be configured
@@ -108,6 +109,12 @@ PidInternalParameters tCalculateParameters(PidParameters ptParameters)
         ar = 0;
     }
 
+    if(ptParameters.limit == 0) {
+        tPidInternalParameters.limit = DBL_MAX;
+    } else {
+        tPidInternalParameters.limit = ptParameters.limit;
+    }
+
 
     tPidInternalParameters.ad = ad;
     tPidInternalParameters.bd = bd;
@@ -115,7 +122,6 @@ PidInternalParameters tCalculateParameters(PidParameters ptParameters)
     tPidInternalParameters.ar = ar;
     tPidInternalParameters.K = ptParameters.K;
     tPidInternalParameters.b = ptParameters.b;
-    tPidInternalParameters.limit = ptParameters.limit;
 
     return tPidInternalParameters;
 }
