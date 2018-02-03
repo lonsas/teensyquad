@@ -1,5 +1,5 @@
-#ifndef GYROCONTROL_H
-#define GYROCONTROL_H
+#ifndef ANGLECONTROL_H
+#define ANGLECONTROL_H
 
 
 void setAngleRef(double dbRollAngleRef, double dbPitchAngleRef, double dbYawAngleRef);
@@ -7,7 +7,7 @@ void setAngleRef(double dbRollAngleRef, double dbPitchAngleRef, double dbYawAngl
 
 void angleControlSetup();
 
-double dbAngleCalculateControl(double * pdbOmegaRollControl, \
+void angleCalculateControl(double * pdbOmegaRollControl, \
                               double * pdbOmegaPitchControl, \
                               double * pdbOmegaYawControl);
 

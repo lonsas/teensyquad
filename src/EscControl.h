@@ -1,10 +1,12 @@
 /*
- * esc_control.h
+ * EscControl.h
  */
 #include "inttypes.h"
+#include <stdbool.h>
+#include <stdint.h>
 
-#ifndef SRC_ESC_CONTROL_H_
-#define SRC_ESC_CONTROL_H_
+#ifndef ESC_CONTROL_H_
+#define ESC_CONTROL_H_
 
 #define MOTOR_ARM 960
 #define MOTOR_OFF 960
@@ -20,16 +22,10 @@
 #define PWM_RATE 400
 #define SCALING (PWM_RATE*(1<<(int32_t)PWM_RES)/1000000.0)
 
-class esc_control {
-private:
-    bool armed;
-    void writeMicros(uint8_t, int);
-public:
-    esc_control();
-    void output(double *);
-    void arm();
-    bool is_armed();
-    void off();
-};
+void EscControlSetup();
+void EscControlOutput(double * motor);
+void EscControlArm();
+bool EscControlIsArmed();
+void EscControlDisarm();
 
-#endif /* SRC_ESC_CONTROL_H_ */
+#endif /* ESC_CONTROL_H_ */

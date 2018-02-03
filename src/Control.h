@@ -4,6 +4,6 @@
 
 void controlSetup();
 
-void controlUpdate();
+void doControl();
 
 #endif /* CONTROL_H */

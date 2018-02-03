@@ -26,7 +26,7 @@ void angleControlSetup()
 
 
 
-double dbAngleCalculateControl(double * pdbOmegaRollControl, \
+void angleCalculateControl(double * pdbOmegaRollControl, \
                               double * pdbOmegaPitchControl, \
                               double * pdbOmegaYawControl)
 {

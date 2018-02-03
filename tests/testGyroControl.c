@@ -15,11 +15,11 @@ START_TEST(testGyroControlSetup)
     /* Override global PIDParameters */
     memset(&g_tGyroParameters, 0, sizeof(g_tGyroParameters));
     g_tGyroParameters.K = 1;
-    g_tGyroParameters.b = 1; /* Ignore sensor input for P controller */
+    g_tGyroParameters.b = 1; 
     g_tGyroParameters.limit = 1e9;
     gyroControlSetup();
     setOmegaRef(dbOmegaDotRollExpected, dbOmegaDotPitchExpected, dbOmegaDotYawExpected);
-    GyroCalculateControl(&dbOmegaDotRoll, &dbOmegaDotPitch, &dbOmegaDotYaw);
+    gyroCalculateControl(&dbOmegaDotRoll, &dbOmegaDotPitch, &dbOmegaDotYaw);
     ck_assert_double_eq_tol(dbOmegaDotRoll, dbOmegaDotRollExpected, 1e-3);
     ck_assert_double_eq_tol(dbOmegaDotPitch, dbOmegaDotPitchExpected, 1e-3);
     ck_assert_double_eq_tol(dbOmegaDotYaw, dbOmegaDotYawExpected, 1e-3);

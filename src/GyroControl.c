@@ -27,7 +27,7 @@ void gyroControlSetup()
 
 
 
-void GyroCalculateControl(double * pdbOmegaDotRollControl, \
+void gyroCalculateControl(double * pdbOmegaDotRollControl, \
                               double * pdbOmegaDotPitchControl, \
                               double * pdbOmegaDotYawControl)
 {

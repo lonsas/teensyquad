@@ -1,5 +1,8 @@
-#include "control.h"
-
+#include "Control.h"
+#include "GyroControl.h"
+#include "AngleControl.h"
+#include "mix.h"
+#include "Receiver.h"
 
 
 
@@ -26,13 +29,13 @@ void doControl() {
 
     double output[4];
 
-    radioInputGet(&throttle, &dbRollRef, &dbPitchRef, &dbYawRef);
+    receiverGetControls(&dbThrottle, &dbRollRef, &dbPitchRef, &dbYawRef);
     setAngleRef(dbRollRef, dbPitchRef, dbYawRef);
-    dbAngleCalculateControl(&dbOmegaRoll, &dbOmegaPitch, &dbOmegaYaw);
+    angleCalculateControl(&dbOmegaRoll, &dbOmegaPitch, &dbOmegaYaw);
     setOmegaRef(dbOmegaRoll, dbOmegaPitch, dbOmegaYaw);
-    dbGyroCalculateControl(&dbOmegaDotRoll, &dbOmegaDotPitch, &dbOmegaDotYaw);
+    gyroCalculateControl(&dbOmegaDotRoll, &dbOmegaDotPitch, &dbOmegaDotYaw);
 
-    mix(throttle, 12, &dbOmegaDotRoll, &dbOmegaDotPitch, &dbOmegaDotYaw, output);
+    mix(dbThrottle, 12, &dbOmegaDotRoll, &dbOmegaDotPitch, &dbOmegaDotYaw, output);
 
 }
 

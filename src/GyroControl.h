@@ -7,7 +7,7 @@ void setOmegaRef(double dbRollOmegaRef, double dbPitchOmegaRef, double dbYawOmeg
 
 void gyroControlSetup();
 
-void GyroCalculateControl(double * pdbOmegaDotRollControl, \
+void gyroCalculateControl(double * pdbOmegaDotRollControl, \
                               double * pdbOmegaDotPitchControl, \
                               double * pdbOmegaDotYawControl);
 

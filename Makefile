@@ -57,7 +57,7 @@ CPPFLAGS += -DARDUINO=101
 CXXFLAGS = -std=gnu++0x -felide-constructors -fno-exceptions -fno-rtti
 
 # compiler options for C only
-CFLAGS =
+CFLAGS=-std=c99
 
 # linker options
 LDFLAGS = -Os -Wl,--gc-sections -mthumb

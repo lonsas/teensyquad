@@ -2,7 +2,7 @@
 #define PIDCONF_H
 #include "PID.h"
 
-PidParameters g_tAngleParameters = (PidParameters){
+PidParameters g_tAngleParameters = {
     .K = 1,
     .Ti = 1,
     .Td = 0,
@@ -14,7 +14,7 @@ PidParameters g_tAngleParameters = (PidParameters){
 };
 
 
-PidParameters g_tGyroParameters = (PidParameters){
+PidParameters g_tGyroParameters = {
     .K = 1,
     .Ti = 1,
     .Td = 0,
