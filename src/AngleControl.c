@@ -16,7 +16,7 @@ void setAngleRef(double dbRollAngleRef, double dbPitchAngleRef, double dbYawAngl
     m_dbYawAngleRef = dbYawAngleRef;
 }
 
-void gyroControlSetup()
+void angleControlSetup()
 {
     // Setup PIDs
     m_tPidAngleRoll = tPidSetup(g_tAngleParameters);

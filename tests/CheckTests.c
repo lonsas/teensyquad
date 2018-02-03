@@ -10,6 +10,7 @@ int main(void)
     sr = srunner_create(CoreSuite());
     srunner_add_suite(sr, PidSuite());
     srunner_add_suite(sr, GyroControlSuite());
+    srunner_add_suite(sr, MixSuite());
 
     srunner_run_all(sr, CK_NORMAL);
     number_failed = srunner_ntests_failed(sr);

@@ -5,7 +5,7 @@
 void setAngleRef(double dbRollAngleRef, double dbPitchAngleRef, double dbYawAngleRef);
 
 
-void gyroControlSetup();
+void angleControlSetup();
 
 double dbAngleCalculateControl(double * pdbOmegaRollControl, \
                               double * pdbOmegaPitchControl, \
