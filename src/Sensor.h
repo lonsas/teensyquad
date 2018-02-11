@@ -5,4 +5,8 @@ void SensorGetOmega(double * pdbRollOmega, double * pdbPitchOmega, double * pdbY
 
 void SensorGetAngle(double * pdbRollAngle, double * pdbPitchAngle, double * pdbYawAngle);
 
+void SensorSetup();
+
+void SensorUpdate();
+
 #endif /* SENSOR_H */

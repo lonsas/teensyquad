@@ -16,6 +16,7 @@ OPTIONS = -DUSB_SERIAL -DLAYOUT_US_ENGLISH
 
 # directory to build in
 BUILDDIR = $(abspath $(CURDIR)/build)
+TESTBUILDDIR = $(abspath $(CURDIR)/build/tests)
 
 #************************************************************************
 # Location of Teensyduino utilities, Toolchain, and Arduino Libraries.
@@ -122,11 +123,11 @@ L_INC += $(foreach lib,$(filter %/, $(wildcard $(LIBRARYPATH)/*/)), -I$(lib))
 SOURCES := $(C_FILES:.c=.o) $(CPP_FILES:.cpp=.o) $(INO_FILES:.ino=.o) $(TC_FILES:.c=.o) $(TCPP_FILES:.cpp=.o) $(LC_FILES:.c=.o) $(LCPP_FILES:.cpp=.o)
 OBJS := $(foreach src,$(SOURCES), $(BUILDDIR)/$(src))
 
-TESTABLESOURCES = src/PID.o src/GyroControl.o src/Sensor.o src/PIDConf.o src/mix.o
-TESTABLEOBJS := $(foreach src,$(TESTABLESOURCES), $(BUILDDIR)/$(src))
+TESTABLESOURCES = src/PID.o src/GyroControl.o src/PIDConf.o src/mix.o
+TESTABLEOBJS := $(foreach src,$(TESTABLESOURCES), $(TESTBUILDDIR)/$(src))
 
 TESTSOURCES = $(TESTC_FILES:.c=.o)
-TESTOBJS := $(foreach src,$(TESTSOURCES), $(BUILDDIR)/$(src))
+TESTOBJS := $(foreach src,$(TESTSOURCES), $(TESTBUILDDIR)/$(src))
 
 
 all: hex
@@ -151,12 +152,16 @@ test: CPPFLAGS = -Wall -g
 test: CXXFLAGS = $(CPPFLAGS)
 test: LDFLAGS = -lcheck
 test: testbuild
-	$(BUILDDIR)/test
+	$(TESTBUILDDIR)/test
 
 
 testbuild: $(TESTOBJS) $(TESTABLEOBJS)
-	$(CC) $(LDFLAGS) -o $(BUILDDIR)/test $(TESTOBJS) $(TESTABLEOBJS)
+	$(CC) $(LDFLAGS) -o $(TESTBUILDDIR)/test $(TESTOBJS) $(TESTABLEOBJS)
 
+
+$(TESTBUILDDIR)/%.o: %.c
+	@mkdir -p "$(dir $@)"
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(L_INC) -o "$@" -c "$<"
 
 $(BUILDDIR)/%.o: %.c
 	@mkdir -p "$(dir $@)"
