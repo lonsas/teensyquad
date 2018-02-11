@@ -27,8 +27,8 @@
 //---------------------------------------------------------------------------------------------------
 // Variable definitions
 
-float beta = betaDef;								// 2 * proportional gain (Kp)
-float q0 = 1.0f, q1 = 0.0f, q2 = 0.0f, q3 = 0.0f;	// quaternion of sensor frame relative to auxiliary frame
+static float beta = betaDef;								// 2 * proportional gain (Kp)
+static float q0 = 1.0f, q1 = 0.0f, q2 = 0.0f, q3 = 0.0f;	// quaternion of sensor frame relative to auxiliary frame
 
 //---------------------------------------------------------------------------------------------------
 // Function declarations
@@ -208,11 +208,11 @@ void MadgwickAHRSupdateIMU(float gx, float gy, float gz, float ax, float ay, flo
 	q3 *= recipNorm;
 }
 
-void MadgwickGetAngles(float * roll, float * pitch, float * yaw)
+void MadgwickAHRSGetAngles(float * roll, float * pitch, float * yaw)
 {
-	roll = atan2f(q0*q1 + q2*q3, 0.5f - q1*q1 - q2*q2);
-	pitch = asinf(-2.0f * (q1*q3 - q0*q2));
-	yaw = atan2f(q1*q2 + q0*q3, 0.5f - q2*q2 - q3*q3);
+    *roll = atan2f(q0*q1 + q2*q3, 0.5f - q1*q1 - q2*q2);
+	*pitch = asinf(-2.0f * (q1*q3 - q0*q2));
+	*yaw = atan2f(q1*q2 + q0*q3, 0.5f - q2*q2 - q3*q3);
 }
 
 //---------------------------------------------------------------------------------------------------
