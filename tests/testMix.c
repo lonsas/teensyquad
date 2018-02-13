@@ -1,10 +1,11 @@
 #include <check.h>
 #include <mix.h>
 
-
+/* mix module local functions */
 extern void mixDistribute(double *roll, double *pitch, double *yaw, double *mixed);
 extern void unmix(double *roll, double *pitch, double *yaw, double *mixed);
 extern void mixOutput(double throttle, double dbBatVolt, double *mixed, double *output);
+
 START_TEST(testMixDistribute)
 {
     double output[4];

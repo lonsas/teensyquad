@@ -17,11 +17,12 @@
 
 #include "MadgwickAHRS.h"
 #include <math.h>
+#include <inttypes.h>
 
 //---------------------------------------------------------------------------------------------------
 // Definitions
 
-#define sampleFreq	512.0f		// sample frequency in Hz
+#define sampleFreq	100.0f		// sample frequency in Hz
 #define betaDef		0.1f		// 2 * proportional gain
 
 //---------------------------------------------------------------------------------------------------
@@ -208,7 +209,7 @@ void MadgwickAHRSupdateIMU(float gx, float gy, float gz, float ax, float ay, flo
 	q3 *= recipNorm;
 }
 
-void MadgwickAHRSGetAngles(float * roll, float * pitch, float * yaw)
+void MadgwickAHRSGetAngles(double * roll, double * pitch, double * yaw)
 {
     *roll = atan2f(q0*q1 + q2*q3, 0.5f - q1*q1 - q2*q2);
 	*pitch = asinf(-2.0f * (q1*q3 - q0*q2));
@@ -222,7 +223,7 @@ void MadgwickAHRSGetAngles(float * roll, float * pitch, float * yaw)
 float invSqrt(float x) {
 	float halfx = 0.5f * x;
 	float y = x;
-	long i = *(long*)&y;
+	int32_t i = *(int32_t*)&y;
 	i = 0x5f3759df - (i>>1);
 	y = *(float*)&i;
 	y = y * (1.5f - (halfx * y * y));
