@@ -11,7 +11,6 @@
 static void  (*pfState)();
 static bool controlActive;
 static bool sensorActive;
-static int timer;
 static bool prevArmSignal;
 static enum state tCurrState;
 

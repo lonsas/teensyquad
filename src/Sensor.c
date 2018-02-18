@@ -2,7 +2,7 @@
 #include "MPU9150_c.h"
 #include "MadgwickAHRS.h"
 #include "MCUConf.h"
-#include "stdlib.h"
+#include "math.h"
 
 #define OMEGA_MAX 250;
 #define ANGLE_MAX 3.15;
@@ -68,9 +68,9 @@ bool SensorAngleIsLevel()
 
 bool SensorOmegaIsZero()
 {
-    return ((abs(m_dbRollOmega) < OMEGA_TOL) &&
-            (abs(m_dbPitchOmega) < OMEGA_TOL)  &&
-            (abs(m_dbYawOmega) < OMEGA_TOL));
+    return ((fabs(m_dbRollOmega) < OMEGA_TOL) &&
+            (fabs(m_dbPitchOmega) < OMEGA_TOL)  &&
+            (fabs(m_dbYawOmega) < OMEGA_TOL));
 }
 
 static inline void GyroScale(int16_t gyro[3])

@@ -2,9 +2,10 @@
 #include "core_pins.h"
 #include "MCUConf.h"
 
+static int dt;
+
 static void mainLoop()
 {
-    int timeEnd;
     int timeStart = micros();
 
     /* Initial state */
@@ -14,14 +15,14 @@ static void mainLoop()
         stateDo();
         stateUpdate();
 
-        timeEnd = micros();
+        dt = micros() - timeStart;
         /* Wait to match sampleTime */
         while((micros() - timeStart) < SAMPLE_TIME);
         timeStart = micros();
     }
 }
 
-void main() {
+int main() {
     mainLoop();
 }
 

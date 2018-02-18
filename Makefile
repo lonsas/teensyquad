@@ -147,10 +147,14 @@ close_uploader:
 
 upload: post_compile reboot close_uploader
 
+coverage: test
+	mkdir -p build/coverage
+	gcovr -r . --html --html-details -o build/coverage/coverage.html
+
 test: CC = gcc
-test: CPPFLAGS = -Wall -g
+test: CPPFLAGS = -Wall -g -fprofile-arcs -ftest-coverage
 test: CXXFLAGS = $(CPPFLAGS)
-test: LDFLAGS = -lcheck -lm
+test: LDFLAGS = -lcheck -lm -lgcov --coverage
 test: L_INC += -Itests
 test: testbuild
 	$(TESTBUILDDIR)/test

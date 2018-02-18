@@ -1,6 +1,7 @@
 #include "MPU9150_c.h"
 #include "Receiver.h"
 #include "inttypes.h"
+#include "core_pins.h"
 
 /* mpu9150 host */
 int16_t g_ax;
@@ -26,5 +27,37 @@ void mpu9150_getMotion6(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int1
     *gx = g_gx;
     *gy = g_gy;
     *gz = g_gz;
+}
+
+
+/* core stuff */
+void attachInterrupt(uint8_t pin, void (*function)(void), int mode)
+{
+    return;
+}
+
+uint32_t micros(void)
+{
+    return 0;
+}
+
+void pinMode(uint8_t pin, uint8_t mode)
+{
+    return;
+}
+
+void analogWrite(uint8_t pin, int val)
+{
+    return;
+}
+
+
+void analogWriteFrequency(uint8_t pin, float frequency)
+{
+    return;
+}
+void analogWriteResolution(uint32_t bits)
+{
+    return;
 }
 
