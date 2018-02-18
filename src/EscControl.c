@@ -13,7 +13,6 @@ static void writeMicros(uint8_t pin, int micros) {
 }
 
 void EscControlSetup() {
-    m_boArmed = false;
 
     pinMode(MOTOR0_PIN, OUTPUT);
     analogWriteFrequency(MOTOR0_PIN, PWM_RATE);
@@ -28,45 +27,47 @@ void EscControlSetup() {
     analogWriteFrequency(MOTOR3_PIN, PWM_RATE);
 
     analogWriteResolution(PWM_RES);
+
+    EscControlDisarm();
 }
 
 void EscControlOutput(double *motor) {
     int32_t motor0_pwm, motor1_pwm, motor2_pwm, motor3_pwm;
     if(m_boArmed) {
         if(motor[0] <= MOTOR_MIN) {
-            motor0_pwm = MOTOR_OFF;
+            motor0_pwm = MOTOR_MICROS_MIN;
         } else if (motor[0] > 1) {
-            motor0_pwm = MOTOR_MAX;
+            motor0_pwm = MOTOR_MICROS_MAX;
         } else {
             motor0_pwm = motor[0] * 1000+1000;
         }
 
 
         if(motor[1] <= MOTOR_MIN) {
-            motor1_pwm = MOTOR_OFF;
+            motor1_pwm = MOTOR_MICROS_MIN;
         } else if (motor[1] > 1) {
-            motor1_pwm = MOTOR_MAX;
+            motor1_pwm = MOTOR_MICROS_MAX;
         } else {
             motor1_pwm = motor[1] * 1000+1000;
         }
 
         if(motor[2] <= MOTOR_MIN) {
-            motor2_pwm = MOTOR_OFF;
+            motor2_pwm = MOTOR_MICROS_MIN;
         } else if (motor[2] > 1) {
-            motor2_pwm = MOTOR_MAX;
+            motor2_pwm = MOTOR_MICROS_MAX;
         } else {
             motor2_pwm = motor[2] * 1000+1000;
         }
 
         if(motor[3] <= MOTOR_MIN) {
-            motor3_pwm = MOTOR_OFF;
+            motor3_pwm = MOTOR_MICROS_MIN;
         } else if (motor[3] > 1) {
-            motor3_pwm = MOTOR_MAX;
+            motor3_pwm = MOTOR_MICROS_MAX;
         } else {
             motor3_pwm = motor[3] * 1000+1000;
         }
     } else {
-        motor0_pwm = motor1_pwm = motor2_pwm = motor3_pwm = MOTOR_OFF;
+        motor0_pwm = motor1_pwm = motor2_pwm = motor3_pwm = MOTOR_MICROS_OFF;
     }
 
     writeMicros(MOTOR0_PIN, motor0_pwm);
@@ -76,10 +77,10 @@ void EscControlOutput(double *motor) {
 }
 
 void EscControlArm() {
-    writeMicros(MOTOR0_PIN, MOTOR_ARM);
-    writeMicros(MOTOR1_PIN, MOTOR_ARM);
-    writeMicros(MOTOR2_PIN, MOTOR_ARM);
-    writeMicros(MOTOR3_PIN, MOTOR_ARM);
+    writeMicros(MOTOR0_PIN, MOTOR_MICROS_ARM);
+    writeMicros(MOTOR1_PIN, MOTOR_MICROS_ARM);
+    writeMicros(MOTOR2_PIN, MOTOR_MICROS_ARM);
+    writeMicros(MOTOR3_PIN, MOTOR_MICROS_ARM);
     m_boArmed = true;
 }
 
@@ -88,10 +89,10 @@ bool EscControlIsArmed() {
 }
 
 void EscControlDisarm() {
-    writeMicros(MOTOR0_PIN, MOTOR_OFF);
-    writeMicros(MOTOR1_PIN, MOTOR_OFF);
-    writeMicros(MOTOR2_PIN, MOTOR_OFF);
-    writeMicros(MOTOR3_PIN, MOTOR_OFF);
+    writeMicros(MOTOR0_PIN, MOTOR_MICROS_OFF);
+    writeMicros(MOTOR1_PIN, MOTOR_MICROS_OFF);
+    writeMicros(MOTOR2_PIN, MOTOR_MICROS_OFF);
+    writeMicros(MOTOR3_PIN, MOTOR_MICROS_OFF);
     m_boArmed = false;
 }
 

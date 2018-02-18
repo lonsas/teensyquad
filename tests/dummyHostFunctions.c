@@ -31,6 +31,8 @@ void mpu9150_getMotion6(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int1
 
 
 /* core stuff */
+int analogWriteArray[100];
+
 void attachInterrupt(uint8_t pin, void (*function)(void), int mode)
 {
     return;
@@ -48,7 +50,7 @@ void pinMode(uint8_t pin, uint8_t mode)
 
 void analogWrite(uint8_t pin, int val)
 {
-    return;
+    analogWriteArray[pin] = val;
 }
 
 
