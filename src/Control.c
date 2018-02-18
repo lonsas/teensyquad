@@ -12,6 +12,10 @@ void controlSetup()
     angleControlSetup();
 }
 
+void controlReset()
+{
+    controlSetup();
+}
 
 void doControl() {
     double dbThrottle;

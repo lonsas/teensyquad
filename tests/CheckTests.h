@@ -5,4 +5,5 @@ Suite * PidSuite(void);
 Suite * GyroControlSuite(void);
 Suite * MixSuite(void);
 Suite * SensorSuite(void);
+Suite * QuadStateSuite(void);
 

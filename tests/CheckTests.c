@@ -12,6 +12,7 @@ int main(void)
     srunner_add_suite(sr, GyroControlSuite());
     srunner_add_suite(sr, MixSuite());
     srunner_add_suite(sr, SensorSuite());
+    srunner_add_suite(sr, QuadStateSuite());
 
     srunner_run_all(sr, CK_NORMAL);
     number_failed = srunner_ntests_failed(sr);

@@ -1,4 +1,6 @@
 #include "MPU9150_c.h"
+#include "Receiver.h"
+#include "inttypes.h"
 
 /* mpu9150 host */
 int16_t g_ax;

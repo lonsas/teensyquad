@@ -1,9 +1,11 @@
 #include "Sensor.h"
 #include "MPU9150_c.h"
 #include "MadgwickAHRS.h"
+#include "MCUConf.h"
+#include "stdlib.h"
 
-#define GYRO_MAX 250.0
-#define GYRO_SCALE (GYRO_MAX/(1<<15))
+#define OMEGA_MAX 250;
+#define ANGLE_MAX 3.15;
 
 static double m_dbRollOmega;
 static double m_dbPitchOmega;
@@ -31,7 +33,15 @@ void SensorGetAngle(double * pdbRollAngle, double * pdbPitchAngle, double * pdbY
 
 
 void SensorSetup() {
+    m_dbRollOmega = 0;
+    m_dbPitchOmega = 0;
+    m_dbYawOmega = 0;
+    m_dbRollAngle = 0;
+    m_dbPitchAngle = 0;
+    m_dbYawAngle = 0;
+
     mpu9150_initialize();
+    MadgwickAHRSInit();
 }
 
 void SensorUpdate() {
@@ -41,6 +51,26 @@ void SensorUpdate() {
     GyroScale(gyro);
     MadgwickAHRSupdateIMU(m_dbRollOmega, m_dbPitchOmega, m_dbYawOmega, acc[0], acc[1], acc[2]);
     MadgwickAHRSGetAngles(&m_dbRollAngle, &m_dbPitchAngle, &m_dbYawAngle);
+}
+
+bool SensorOk()
+{
+    return true;
+}
+
+bool SensorAngleIsLevel()
+{
+
+    return ((fabs(m_dbRollAngle) <  ANGLE_TOL)  &&
+            (fabs(m_dbPitchAngle) <  ANGLE_TOL)  &&
+            (fabs(m_dbYawAngle) <  ANGLE_TOL));
+}
+
+bool SensorOmegaIsZero()
+{
+    return ((abs(m_dbRollOmega) < OMEGA_TOL) &&
+            (abs(m_dbPitchOmega) < OMEGA_TOL)  &&
+            (abs(m_dbYawOmega) < OMEGA_TOL));
 }
 
 static inline void GyroScale(int16_t gyro[3])

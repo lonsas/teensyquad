@@ -72,14 +72,8 @@ START_TEST(testSensorUpdateAccelerationChange)
     g_gx = 0; //1*(1.0/(250.0/(1<<15)));
     g_gy = 0;
     g_gz = 0;
-    for(int i = 0; i < 5000; i++) {
+    for(int i = 0; i < 500; i++) {
         SensorUpdate();
-
-    SensorGetOmega(&gRoll, &gPitch, &gYaw);
-    SensorGetAngle(&aRoll, &aPitch, &aYaw);
-
-    printf("g: %f %f %f ", gRoll, gPitch, gYaw);
-    printf("a: %f %f %f\n", aRoll, aPitch, aYaw);
     }
 
     SensorGetOmega(&gRoll, &gPitch, &gYaw);
@@ -89,6 +83,37 @@ START_TEST(testSensorUpdateAccelerationChange)
     ck_assert_double_eq_tol(gPitch, 0, 1e-3);
     ck_assert_double_eq_tol(gYaw, 0, 1e-3);
     ck_assert_double_eq_tol(aRoll, 3.14/4, 1e-3);
+    ck_assert_double_eq_tol(aPitch, 0, 1e-3);
+    ck_assert_double_eq_tol(aYaw, 0, 1e-3);
+}
+END_TEST
+
+START_TEST(testSensorUpdateGyro)
+{
+    double aRoll;
+    double aPitch;
+    double aYaw;
+    double gRoll;
+    double gPitch;
+    double gYaw;
+    SensorSetup();
+    g_ax = 0;
+    g_ay = 10; 
+    g_az = 10;
+    g_gx = 1*(1.0/(250.0/(1<<15)));
+    g_gy = 0;
+    g_gz = 0;
+    for(int i = 0; i < 100; i++) {
+        SensorUpdate();
+    }
+
+    SensorGetOmega(&gRoll, &gPitch, &gYaw);
+    SensorGetAngle(&aRoll, &aPitch, &aYaw);
+
+    ck_assert_double_eq_tol(gRoll, 1, 1e-3);
+    ck_assert_double_eq_tol(gPitch, 0, 1e-3);
+    ck_assert_double_eq_tol(gYaw, 0, 1e-3);
+    ck_assert_double_gt(aRoll, 3.14/4);
     ck_assert_double_eq_tol(aPitch, 0, 1e-3);
     ck_assert_double_eq_tol(aYaw, 0, 1e-3);
 }
@@ -107,6 +132,7 @@ Suite * SensorSuite(void)
     tcase_add_test(tc_core, testSensorInit);
     tcase_add_test(tc_core, testSensorUpdateNoSensor);
     tcase_add_test(tc_core, testSensorUpdateAccelerationChange);
+    tcase_add_test(tc_core, testSensorUpdateGyro);
 
     suite_add_tcase(s, tc_core);
 

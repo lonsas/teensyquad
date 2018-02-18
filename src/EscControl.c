@@ -4,8 +4,7 @@
 
 #include "EscControl.h"
 #include "core_pins.h"
-#include <stdbool.h>
-#include <stdint.h>
+
 
 static bool m_boArmed;
 
@@ -81,7 +80,6 @@ void EscControlArm() {
     writeMicros(MOTOR1_PIN, MOTOR_ARM);
     writeMicros(MOTOR2_PIN, MOTOR_ARM);
     writeMicros(MOTOR3_PIN, MOTOR_ARM);
-    delay(1000);
     m_boArmed = true;
 }
 
@@ -89,7 +87,7 @@ bool EscControlIsArmed() {
         return m_boArmed;
 }
 
-void EscControlOff() {
+void EscControlDisarm() {
     writeMicros(MOTOR0_PIN, MOTOR_OFF);
     writeMicros(MOTOR1_PIN, MOTOR_OFF);
     writeMicros(MOTOR2_PIN, MOTOR_OFF);

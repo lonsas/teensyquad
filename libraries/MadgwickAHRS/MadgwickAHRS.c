@@ -29,8 +29,11 @@
 // Variable definitions
 
 static float beta = betaDef;								// 2 * proportional gain (Kp)
-static float q0 = 1.0f, q1 = 0.0f, q2 = 0.0f, q3 = 0.0f;	// quaternion of sensor frame relative to auxiliary frame
-
+// quaternion of sensor frame relative to auxiliary frame
+static float q0;
+static float q1;
+static float q2;
+static float q3;
 //---------------------------------------------------------------------------------------------------
 // Function declarations
 
@@ -38,6 +41,14 @@ float invSqrt(float x);
 
 //====================================================================================================
 // Functions
+
+void MadgwickAHRSInit()
+{
+    q0 = 1.0f;
+    q1 = 0.0f;
+    q2 = 0.0f;
+    q3 = 0.0f;
+}
 
 //---------------------------------------------------------------------------------------------------
 // AHRS algorithm update
