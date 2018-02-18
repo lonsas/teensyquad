@@ -21,6 +21,13 @@ static void gotoReadyWait()
     stateUpdate();
 }
 
+static void gotoArmed()
+{
+    gotoReadyWait();
+    width[AUX1] = 2000;
+    stateUpdate();
+}
+
 START_TEST(testStateInit)
 {
     stateInit();
@@ -117,6 +124,16 @@ START_TEST(testStateArmConditionReset)
 }
 END_TEST
 
+START_TEST(createCoverage)
+{
+    gotoArmed();
+    for(int i = 0; i < 100; i++) {
+        stateDo();
+        stateUpdate();
+    }
+}
+END_TEST
+
 Suite * QuadStateSuite(void)
 {
     Suite *s;
@@ -134,6 +151,7 @@ Suite * QuadStateSuite(void)
     tcase_add_test(tc_core, testStateArmConditionThrottle);
     tcase_add_test(tc_core, testStateArmConditionSensor);
     tcase_add_test(tc_core, testStateArmConditionReset);
+    tcase_add_test(tc_core, createCoverage);
     suite_add_tcase(s, tc_core);
 
     return s;

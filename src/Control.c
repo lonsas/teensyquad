@@ -40,7 +40,7 @@ void doControl() {
     gyroCalculateControl(&dbOmegaDotRoll, &dbOmegaDotPitch, &dbOmegaDotYaw);
 
     mix(dbThrottle, 12, &dbOmegaDotRoll, &dbOmegaDotPitch, &dbOmegaDotYaw, output);
-
+    EscControlOutput(output);
 }
 
 
