@@ -11,8 +11,8 @@ const static uint8_t RADIOPIN_RISE = 2;
 
 
 /* Interrupt managed variables */
-volatile int32_t radio_rise;
-volatile int32_t width[6];
+static volatile int32_t radio_rise;
+static volatile int32_t width[RADIO_PINS];
 
 
 
@@ -109,3 +109,12 @@ bool receiverSignalMiddle(int signal)
     return ((width[signal] < 1600) && (width[signal] > 1400));
 }
 
+void receiverSetAllManualPW(int * micros) {
+    for(int i = 0; i < RADIO_PINS; i++) {
+        width[i] = micros[i];
+    }
+}
+
+void receiverSetManualPW(int signal, int micros) {
+    width[signal] = micros;
+}

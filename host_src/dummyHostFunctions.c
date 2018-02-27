@@ -1,4 +1,5 @@
 #include "MPU9150_c.h"
+#include "stdio.h"
 #include "Receiver.h"
 #include "inttypes.h"
 #include "core_pins.h"

@@ -2,7 +2,6 @@
 #include "QuadState.h"
 #include "Receiver.h"
 
-extern volatile int32_t width[6];
 
 extern int16_t g_ax;
 extern int16_t g_gx;
@@ -10,7 +9,7 @@ extern int16_t g_gx;
 static void initPwmWidth()
 {
     for(int i = 0; i < 6; i++) {
-        width[i] = 1000;
+        receiverSetManualPW(i, 1000);
     }
 }
 
@@ -24,7 +23,7 @@ static void gotoReadyWait()
 static void gotoArmed()
 {
     gotoReadyWait();
-    width[AUX1] = 2000;
+    receiverSetManualPW(AUX1, 2000);
     stateUpdate();
 }
 
@@ -68,13 +67,13 @@ END_TEST
 START_TEST(testStateArmDisarm)
 {
     gotoReadyWait();
-    width[AUX1] = 2000;
+    receiverSetManualPW(AUX1, 2000);
     for(int i = 0; i < 10; i++) {
         stateUpdate();
         ck_assert_int_eq(getCurrState(), ARMED);
     }
     /* Disarm */
-    width[AUX1] = 1000;
+    receiverSetManualPW(AUX1, 1000);
     stateUpdate();
     ck_assert_int_eq(getCurrState(), READY_WAIT);
 }
@@ -83,9 +82,9 @@ END_TEST
 START_TEST(testStateArmConditionThrottle)
 {
     gotoReadyWait();
-    width[AUX1] = 2000;
+    receiverSetManualPW(AUX1, 2000);
 
-    width[THROTTLE] = 1500;
+    receiverSetManualPW(THROTTLE, 1500);
     stateUpdate();
     ck_assert_int_eq(getCurrState(), READY_WAIT);
 }
@@ -94,7 +93,7 @@ END_TEST
 START_TEST(testStateArmConditionSensor)
 {
     gotoReadyWait();
-    width[AUX1] = 2000;
+    receiverSetManualPW(AUX1, 2000);
 
     g_gx = 200;
     g_ax = 100;
@@ -108,17 +107,17 @@ END_TEST
 START_TEST(testStateArmConditionReset)
 {
     gotoReadyWait();
-    width[AUX1] = 2000;
+    receiverSetManualPW(AUX1, 2000);
 
-    width[THROTTLE] = 1500;
+    receiverSetManualPW(THROTTLE, 1500);
     stateUpdate();
-    width[THROTTLE] = 1000;
-    stateUpdate();
-    ck_assert_int_eq(getCurrState(), READY_WAIT);
-    width[AUX1] = 1000;
+    receiverSetManualPW(THROTTLE, 1000);
     stateUpdate();
     ck_assert_int_eq(getCurrState(), READY_WAIT);
-    width[AUX1] = 2000;
+    receiverSetManualPW(AUX1, 1000);
+    stateUpdate();
+    ck_assert_int_eq(getCurrState(), READY_WAIT);
+    receiverSetManualPW(AUX1, 2000);
     stateUpdate();
     ck_assert_int_eq(getCurrState(), ARMED);
 }

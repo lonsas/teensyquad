@@ -17,6 +17,7 @@ OPTIONS = -DUSB_SERIAL -DLAYOUT_US_ENGLISH
 # directory to build in
 BUILDDIR = $(abspath $(CURDIR)/build)
 TESTBUILDDIR = $(abspath $(CURDIR)/build/tests)
+MODELBUILDDIR = $(abspath $(CURDIR)/build/model)
 
 #************************************************************************
 # Location of Teensyduino utilities, Toolchain, and Arduino Libraries.
@@ -123,11 +124,16 @@ L_INC += $(foreach lib,$(filter %/, $(wildcard $(LIBRARYPATH)/*/)), -I$(lib))
 SOURCES := $(C_FILES:.c=.o) $(CPP_FILES:.cpp=.o) $(INO_FILES:.ino=.o) $(TC_FILES:.c=.o) $(TCPP_FILES:.cpp=.o) $(LC_FILES:.c=.o) $(LCPP_FILES:.cpp=.o)
 OBJS := $(foreach src,$(SOURCES), $(BUILDDIR)/$(src))
 
-TESTABLESOURCES = src/PID.o src/GyroControl.o src/Sensor.o libraries/MadgwickAHRS/MadgwickAHRS.o src/PIDConf.o src/mix.o src/QuadState.o src/Control.o src/AngleControl.o src/Receiver.o src/EscControl.o
+TESTABLESOURCES = src/PID.o src/GyroControl.o src/Sensor.o libraries/MadgwickAHRS/MadgwickAHRS.o src/PIDConf.o src/mix.o src/QuadState.o src/Control.o src/AngleControl.o src/Receiver.o src/EscControl.o host_src/dummyHostFunctions.o
 TESTABLEOBJS := $(foreach src,$(TESTABLESOURCES), $(TESTBUILDDIR)/$(src))
 
 TESTSOURCES = $(TESTC_FILES:.c=.o)
 TESTOBJS := $(foreach src,$(TESTSOURCES), $(TESTBUILDDIR)/$(src))
+
+MODELSOURCES = src/PID.o src/GyroControl.o src/Sensor.o libraries/MadgwickAHRS/MadgwickAHRS.o src/PIDConf.o src/mix.o src/QuadState.o src/Control.o src/AngleControl.o src/Receiver.o src/EscControl.o host_src/dummyHostFunctions.o
+MODELOBJS := $(foreach src,$(MODELSOURCES), $(MODELBUILDDIR)/$(src))
+
+MODELLIBRARY := $(MODELBUILDDIR)/teensyquad.so
 
 
 all: hex
@@ -151,18 +157,30 @@ coverage: test
 	mkdir -p build/coverage
 	gcovr -r . --html --html-details -o build/coverage/coverage.html
 
+model: CC = gcc
+model: CPPFLAGS = -Wall -g -fPIC
+model: CXXFLAGS = $(CPPFLAGS)
+model: LDFLAGS = -lm -shared -lc
+model: L_INC += -Imodels -Ihost_src
+model: $(MODELLIBRARY)
+	@echo "done"
+
+$(MODELLIBRARY): $(MODELOBJS)
+	$(CC) $(LDFLAGS) -o $@ $^
 test: CC = gcc
 test: CPPFLAGS = -Wall -g -fprofile-arcs -ftest-coverage
 test: CXXFLAGS = $(CPPFLAGS)
 test: LDFLAGS = -lcheck -lm -lgcov --coverage
-test: L_INC += -Itests
+test: L_INC += -Itests -Ihost_src
 test: testbuild
 	$(TESTBUILDDIR)/test
-
 
 testbuild: $(TESTOBJS) $(TESTABLEOBJS)
 	$(CC) $(LDFLAGS) -o $(TESTBUILDDIR)/test $(TESTOBJS) $(TESTABLEOBJS)
 
+$(MODELBUILDDIR)/%.o: %.c
+	@mkdir -p "$(dir $@)"
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(L_INC) -o "$@" -c "$<"
 
 $(TESTBUILDDIR)/%.o: %.c
 	@mkdir -p "$(dir $@)"
