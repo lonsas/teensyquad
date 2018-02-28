@@ -1,18 +1,97 @@
-import ctypes
+from ctypes import *
+import os
 
+class teensyquad:
+    
+    def __init__(self):
+        dll_name = "teensyquad.so"
+        dll_path = os.path.dirname(__file__) + "/../build/model/"
+        self.quad = CDLL(dll_path + dll_name)
+        self.quad.stateInit()
+        self.setDefaultSticks()
 
-quad = ctypes.CDLL("../build/model/teensyquad.so")
+    def setCommands(self, commands):
+        if(len(commands) != 6):
+            print("setCommand wrong usage")
+            return;
+        # Pulse width is between 1000 and 2000 micro seconds, scale
+        commands = [int(x * 1000 + 1000) for x in commands]
+        pulse_width = (c_int * len(commands))(*commands)
+        self.quad.receiverSetAllManualPW(pulse_width)
 
-py_receiver = [1000] * 6;
-receiver = (ctypes.c_int * len(py_receiver))(*py_receiver)
+    def setCommand(self, signal, command):
+        pulse_width = command * 1000 + 1000
+        self.quad.receiverSetManualPW(signal, int(pulse_width))
 
-quad.stateInit()
-quad.receiverSetAllManualPW(receiver)
-for _ in range(10):
-    print("State: {0}".format(quad.getCurrState()))
-    quad.stateUpdate()
+    def setMotion(self, acceleration, rotational_velocity):
+        ACCELERATION_MAX = 20.0 #m/s^2
+        ROTATIONAL_VELOCITY_MAX = 20.0 #rad/s
+        DATA_WIDTH = 12 #bits
+      
+        a_scale = (2**DATA_WIDTH)/ACCELERATION_MAX
+        r_scale = (2**DATA_WIDTH)/ROTATIONAL_VELOCITY_MAX
+        
+        a = [a_scale * max(x, ACCELERATION_MAX) for x in acceleration]
+        r = [r_scale * max(x, ROTATIONAL_VELOCITY_MAX) for x in rotational_velocity]
 
-quad.receiverSetManualPW(4, 2000)
-for _ in range(10):
-    print("State: {0}".format(quad.getCurrState()))
-    quad.stateUpdate()
+        self.quad.setMotion6(int(a[0]), int(a[1]), int(a[2]), int(r[0]), int(r[1]), int(r[2]))
+
+    def getMotors(self):
+        motor_analog_values = (c_int * 4)(*[0, 0, 0, 0])
+        self.quad.getMotorOutput(motor_analog_values)
+        PWM_RES = 12
+        PWM_RATE = 400
+
+        to_micro_scaling = 1/(PWM_RATE*(2**PWM_RES)/1000000.0)
+        motors = [(x * to_micro_scaling - 1000)/1000 for x in motor_analog_values]
+        return motors
+
+    def doIteration(self):
+        self.quad.stateUpdate()
+        self.quad.stateDo()
+
+    def arm(self, arm):
+        if(arm):
+            self.setCommand(4, 1)
+        else:
+            self.setCommand(4, 0)
+
+    def setThrottle(self, throttle):
+        self.setCommand(2, throttle)
+
+    def setYawStick(self, yaw):
+        self.setCommand(3, yaw + 0.5)
+
+    def setRollStick(self, roll):
+        self.setCommand(3, roll + 0.5)
+
+    def setPitchStick(self, pitch):
+        self.setCommand(3, pitch + 0.5)
+
+    def setDefaultSticks(self):
+        self.setCommands([0.5, 0.5, 0, 0.5, 0, 0])
+
+    def getState(self):
+        return int(self.quad.getCurrState())
+
+    def printState(self):
+        print("State: {0}, motors: {1}".format(quad.getState(), quad.getMotors()))
+
+if __name__ == "__main__":
+    print("Starting...")
+    quad = teensyquad()
+    for _ in range(10):
+        quad.doIteration()
+        quad.printState()
+
+    print("Arming...")
+    quad.arm(True)
+    for _ in range(10):
+        quad.doIteration()
+        quad.printState()
+
+    print("Disturbance...")
+    quad.setMotion([0,0,1], [0,0,0])
+    for _ in range(10):
+        quad.doIteration()
+        quad.printState()

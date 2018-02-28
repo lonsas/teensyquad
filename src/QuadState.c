@@ -72,6 +72,7 @@ static void stateReadyWaitUpdate()
         if(receiverSignalLow(THROTTLE) &&
            SensorAngleIsLevel() &&
            SensorOmegaIsZero()) {
+            /* TODO: check all other controls that they are in the middle also */
             transition(&stateArmed);
         }
     }

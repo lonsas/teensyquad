@@ -1,8 +1,9 @@
+#include "dummyHostFunction.h"
 #include "MPU9150_c.h"
-#include "stdio.h"
 #include "Receiver.h"
 #include "inttypes.h"
 #include "core_pins.h"
+#include "EscControl.h"
 
 /* mpu9150 host */
 int16_t g_ax;
@@ -29,6 +30,7 @@ void mpu9150_getMotion6(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int1
     *gy = g_gy;
     *gz = g_gz;
 }
+
 
 
 /* core stuff */
@@ -62,5 +64,25 @@ void analogWriteFrequency(uint8_t pin, float frequency)
 void analogWriteResolution(uint32_t bits)
 {
     return;
+}
+
+/* Model stuff */
+
+void setMotion6(int ax, int ay, int az, int gx, int gy, int gz)
+{
+    g_ax = ax;
+    g_ay = ay;
+    g_az = az;
+    g_gx = gx;
+    g_gy = gy;
+    g_gz = gz;
+}
+
+void getMotorOutput(int * motor)
+{
+    motor[0] = analogWriteArray[MOTOR0_PIN];
+    motor[1] = analogWriteArray[MOTOR1_PIN];
+    motor[2] = analogWriteArray[MOTOR2_PIN];
+    motor[3] = analogWriteArray[MOTOR3_PIN];
 }
 
