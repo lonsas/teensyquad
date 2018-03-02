@@ -1,7 +1,7 @@
 from ctypes import *
 import os
 
-class teensyquad:
+class TeensyQuad:
     
     def __init__(self):
         dll_name = "teensyquad.so"
@@ -104,7 +104,7 @@ class teensyquad:
 
 if __name__ == "__main__":
     print("Starting...")
-    quad = teensyquad()
+    quad = TeensyQuad()
     for _ in range(10):
         quad.doIteration()
         quad.printState()
