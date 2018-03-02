@@ -43,9 +43,10 @@ void unmix(double *roll, double *pitch, double *yaw, double *mixed) {
 
 void mixOutput(double throttle, double dbBatVolt, double *mixed, double *output) {
     
-    if(throttle > dbBatVolt * THROTTLE_MAX) {
-        throttle = dbBatVolt * THROTTLE_MAX;
+    if(throttle > THROTTLE_MAX) {
+        throttle = THROTTLE_MAX;
     }
+    throttle = throttle * dbBatVolt;
     /* Add throttle and saturate */
     for(int i = 0; i < 4; i++) {
         mixed[i] += throttle;

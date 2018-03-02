@@ -70,7 +70,7 @@ void receiverGetControls(double * throttle, double * roll, double * pitch, doubl
     *roll = (width[ROLL] - 1500) / 500.0;
     *pitch = (width[PITCH] - 1500) / 500.0;
     *yaw = (width[YAW] - 1500) / 500.0;
-    *throttle = (width[THROTTLE] - 1500) / 500.0;
+    *throttle = (width[THROTTLE] - 1000) / 1000.0;
 
 }
 

@@ -51,7 +51,7 @@ START_TEST(testMixOutput)
     double mixed[4] = {0};
     const double cmixed[4] = {0};
     double output[4];
-    mixOutput(1, 2, mixed, output);
+    mixOutput(0.5, 2, mixed, output);
     unmix(&roll, &pitch, &yaw, mixed);
     mixDistribute(&roll, &pitch, &yaw, mixed);
     for(int i = 0; i < 4; i++) {
@@ -69,11 +69,11 @@ START_TEST(testMixOutputSaturated)
     double mixed[4] = {0};
     const double cmixed[4] = {0};
     double output[4];
-    mixOutput(2, 1, mixed, output);
+    mixOutput(1.1, 12, mixed, output);
     unmix(&roll, &pitch, &yaw, mixed);
     mixDistribute(&roll, &pitch, &yaw, mixed);
     for(int i = 0; i < 4; i++) {
-        ck_assert_double_eq_tol(output[i], 1*THROTTLE_MAX, 1e-9);
+        ck_assert_double_eq_tol(output[i], THROTTLE_MAX, 1e-9);
         ck_assert_double_eq_tol(mixed[i], cmixed[i], 1e-9);
     }
 }
