@@ -24,15 +24,15 @@ class teensyquad:
         self.quad.receiverSetManualPW(signal, int(pulse_width))
 
     def setMotion(self, acceleration, rotational_velocity):
-        ACCELERATION_MAX = 20.0 #m/s^2
-        ROTATIONAL_VELOCITY_MAX = 20.0 #rad/s
-        DATA_WIDTH = 12 #bits
+        ACCELERATION_MAX = 2.0*9.82 #m/s^2
+        ROTATIONAL_VELOCITY_MAX = 250.0 #rad/s
+        DATA_WIDTH = 15 #bits
       
         a_scale = (2**DATA_WIDTH)/ACCELERATION_MAX
         r_scale = (2**DATA_WIDTH)/ROTATIONAL_VELOCITY_MAX
         
-        a = [a_scale * max(x, ACCELERATION_MAX) for x in acceleration]
-        r = [r_scale * max(x, ROTATIONAL_VELOCITY_MAX) for x in rotational_velocity]
+        a = [a_scale * min(x, ACCELERATION_MAX) for x in acceleration]
+        r = [r_scale * min(x, ROTATIONAL_VELOCITY_MAX) for x in rotational_velocity]
 
         self.quad.setMotion6(int(a[0]), int(a[1]), int(a[2]), int(r[0]), int(r[1]), int(r[2]))
 
@@ -74,8 +74,33 @@ class teensyquad:
     def getState(self):
         return int(self.quad.getCurrState())
 
+    def getSensorAngle(self):
+        roll = c_double()
+        pitch = c_double()
+        yaw = c_double()
+        self.quad.SensorGetAngle(byref(roll), byref(pitch), byref(yaw))
+        return [roll.value, pitch.value, yaw.value]
+
+    def getSensorOmega(self):
+        roll = c_double()
+        pitch = c_double()
+        yaw = c_double()
+        self.quad.SensorGetOmega(byref(roll), byref(pitch), byref(yaw))
+        return [roll.value, pitch.value, yaw.value]
+
+    def update(self, angle, rotation):
+       self.setMotion(angle, rotation)
+       self.quad.stateUpdate()
+       self.quad.stateDo()
+       return self.getMotors()
+
+    def gotoArmed(self):
+       self.doIteration()
+       self.arm(True)
+       self.doIteration()
+
     def printState(self):
-        print("State: {0}, motors: {1}".format(quad.getState(), quad.getMotors()))
+        print("State: {0}, motors: {1} Sensor: a:{2} o:{3}".format(self.getState(), self.getMotors(), self.getSensorAngle(), self.getSensorOmega()))
 
 if __name__ == "__main__":
     print("Starting...")
@@ -90,8 +115,13 @@ if __name__ == "__main__":
         quad.doIteration()
         quad.printState()
 
-    print("Disturbance...")
-    quad.setMotion([0,0,1], [0,0,0])
+    print("Throttle...")
     for _ in range(10):
-        quad.doIteration()
+        quad.setThrottle(1)
+        quad.update([0,0,0], [0,0,0])
+        quad.printState()
+
+    print("Disturbance...")
+    for _ in range(10):
+        quad.update([0,0,1], [0,0.1,0])
         quad.printState()
