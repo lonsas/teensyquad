@@ -147,7 +147,7 @@ post_compile: $(TARGET).hex
 
 reboot:
 	@-$(abspath $(TOOLSPATH))/teensy_reboot
-	
+
 close_uploader:
 	@sleep 2; pkill teensy
 

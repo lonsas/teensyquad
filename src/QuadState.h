@@ -5,7 +5,7 @@ enum state {
     STARTUP,
     READY_WAIT,
     ARMED,
-}; 
+};
 
 void stateUpdate();
 

@@ -39,7 +39,6 @@ START_TEST(testMixUnmix)
     ck_assert_double_eq_tol(roll, croll, 1e-9);
     ck_assert_double_eq_tol(pitch, cpitch, 1e-9);
     ck_assert_double_eq_tol(yaw, cyaw, 1e-9);
-    
 }
 END_TEST
 

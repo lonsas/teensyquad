@@ -2,7 +2,6 @@ from ctypes import *
 import os
 
 class TeensyQuad:
-    
     def __init__(self):
         dll_name = "teensyquad.so"
         dll_path = os.path.dirname(__file__) + "/../build/model/"
@@ -27,10 +26,10 @@ class TeensyQuad:
         ACCELERATION_MAX = 2.0*9.82 #m/s^2
         ROTATIONAL_VELOCITY_MAX = 250.0 #rad/s
         DATA_WIDTH = 15 #bits
-      
+
         a_scale = (2**DATA_WIDTH)/ACCELERATION_MAX
         r_scale = (2**DATA_WIDTH)/ROTATIONAL_VELOCITY_MAX
-        
+
         a = [a_scale * min(x, ACCELERATION_MAX) for x in acceleration]
         r = [r_scale * min(x, ROTATIONAL_VELOCITY_MAX) for x in rotational_velocity]
 

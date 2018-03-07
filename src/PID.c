@@ -15,7 +15,7 @@ Pid tPidSetup(PidParameters tParameters)
     tPid.tParameters = tCalculateParameters(tParameters);
     resetState(&tPid);
     return tPid;
-} 
+}
 
 double dbCalculateOutput(Pid * ptPid, double ref, double y)
 {
@@ -25,7 +25,7 @@ double dbCalculateOutput(Pid * ptPid, double ref, double y)
     double dbOutputSat;
     PidState * tState;
     PidInternalParameters * tParameters;
-    
+
     tState = &(ptPid->tState);
     tParameters = &(ptPid->tParameters);
 
@@ -84,7 +84,7 @@ PidInternalParameters tCalculateParameters(PidParameters ptParameters)
     double bi;
     double ar;
     PidInternalParameters tPidInternalParameters;
-    
+
     /* Protect against division by zero if Td is not set */
     double ad_div = ptParameters.Td + ptParameters.N * ptParameters.h;
     if(ad_div != 0) {
@@ -125,6 +125,3 @@ PidInternalParameters tCalculateParameters(PidParameters ptParameters)
 
     return tPidInternalParameters;
 }
-    
-
-

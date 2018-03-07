@@ -6,7 +6,7 @@
 START_TEST(testPidSetup)
 {
     PidParameters tParameters;
-    
+
     tParameters.K = 1;
     Pid tTestPid;
     Pid tEmptyPid;

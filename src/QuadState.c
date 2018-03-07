@@ -86,8 +86,8 @@ static void stateArmed()
     controlReset();
     EscControlArm();
     controlActive = true;
-    
-    entryDone(&stateArmedUpdate); 
+
+    entryDone(&stateArmedUpdate);
 }
 
 static void stateArmedUpdate()
@@ -127,5 +127,3 @@ void stateInit()
     controlActive = false;
     transition(&stateStartup);
 }
-
-

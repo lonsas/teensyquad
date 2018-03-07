@@ -67,9 +67,9 @@ START_TEST(testSensorUpdateAccelerationChange)
     double gYaw;
     SensorSetup();
     g_ax = 0;
-    g_ay = 10; 
+    g_ay = 10;
     g_az = 10;
-    g_gx = 0; //1*(1.0/(250.0/(1<<15)));
+    g_gx = 0;
     g_gy = 0;
     g_gz = 0;
     for(int i = 0; i < 500; i++) {
@@ -98,7 +98,7 @@ START_TEST(testSensorUpdateGyro)
     double gYaw;
     SensorSetup();
     g_ax = 0;
-    g_ay = 10; 
+    g_ay = 10;
     g_az = 10;
     g_gx = 1*(1.0/(250.0/(1<<15)));
     g_gy = 0;

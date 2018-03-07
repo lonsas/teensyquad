@@ -27,7 +27,7 @@ void doControl() {
     double dbOmegaRoll;
     double dbOmegaPitch;
     double dbOmegaYaw;
-    
+
     double dbOmegaDotRoll;
     double dbOmegaDotPitch;
     double dbOmegaDotYaw;
