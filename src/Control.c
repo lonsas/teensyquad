@@ -19,28 +19,30 @@ void controlReset()
 }
 
 void doControl() {
-    double dbThrottle;
-    double dbRollRef;
-    double dbPitchRef;
-    double dbYawRef;
+    double throttle;
+    double rollRef;
+    double pitchRef;
 
-    double dbOmegaRoll;
-    double dbOmegaPitch;
-    double dbOmegaYaw;
+    double dummy;
+    double rollOmegaRef;
+    double pitchOmegaRef;
+    double yawOmegaRef;
 
-    double dbOmegaDotRoll;
-    double dbOmegaDotPitch;
-    double dbOmegaDotYaw;
+    double rollOmegaDot;
+    double pitchOmegaDot;
+    double yawOmegaDot;
 
     double output[4];
 
-    receiverGetControls(&dbThrottle, &dbRollRef, &dbPitchRef, &dbYawRef);
-    setAngleRef(dbRollRef, dbPitchRef, dbYawRef);
-    angleCalculateControl(&dbOmegaRoll, &dbOmegaPitch, &dbOmegaYaw);
-    setOmegaRef(dbOmegaRoll, dbOmegaPitch, dbOmegaYaw);
-    gyroCalculateControl(&dbOmegaDotRoll, &dbOmegaDotPitch, &dbOmegaDotYaw);
+    receiverGetControls(&throttle, &rollRef, &pitchRef, &yawOmegaRef);
 
-    mix(dbThrottle, 12, &dbOmegaDotRoll, &dbOmegaDotPitch, &dbOmegaDotYaw, output);
+    setAngleRef(rollRef, pitchRef, 0); /* No yaw angle control */
+    angleCalculateControl(&rollOmegaRef, &pitchOmegaRef, &dummy);
+
+    setOmegaRef(rollOmegaRef, pitchOmegaRef, yawOmegaRef);
+    gyroCalculateControl(&rollOmegaDot, &pitchOmegaDot, &yawOmegaDot);
+
+    mix(throttle, 12, &rollOmegaDot, &pitchOmegaDot, &yawOmegaDot, output);
     EscControlOutput(output);
 }
 

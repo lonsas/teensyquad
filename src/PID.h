@@ -3,7 +3,7 @@
 
 #include "PID_types.h"
 
-/* Create Pid object 
+/* Create Pid object
  *
  * tParameters parameter set to be used
  * returns configured Pid struct
@@ -33,7 +33,7 @@ extern void updateState(Pid * ptPid, double u);
  *
  * returns control signal
  */
-double dbCalculateAndUpdate(Pid * pPid, double ref, double y, double old_u);
+extern double dbCalculateAndUpdate(Pid * pPid, double ref, double y, double old_u);
 
 /* Resets the Pid state
  * ptPid the Pid whose state to reset
