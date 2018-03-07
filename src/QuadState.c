@@ -5,6 +5,7 @@
 #include "EscControl.h"
 #include "Sensor.h"
 #include "MCUConf.h"
+#include "PIDConf.h"
 
 
 /* Module local variables */
@@ -39,6 +40,7 @@ static void stateStartup()
 {
     tCurrState = STARTUP;
     receiverSetup();
+    PIDConfLoad();
     controlSetup();
     SensorSetup();
     EscControlSetup();

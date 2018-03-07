@@ -19,13 +19,11 @@ void setOmegaRef(double dbRollOmegaRef, double dbPitchOmegaRef, double dbYawOmeg
 
 void gyroControlSetup()
 {
-    // Setup PIDs
-    m_tPidOmegaRoll = tPidSetup(g_tGyroParameters);
-    m_tPidOmegaPitch = tPidSetup(g_tGyroParameters);
-    m_tPidOmegaYaw = tPidSetup(g_tGyroParameters);
+    /* Setup PIDs */
+    m_tPidOmegaRoll = tPidSetup(g_gyroRollPidParameters);
+    m_tPidOmegaPitch = tPidSetup(g_gyroPitchPidParameters);
+    m_tPidOmegaYaw = tPidSetup(g_gyroYawPidParameters);
 }
-
-
 
 void gyroCalculateControl(double * pdbOmegaDotRollControl, \
                               double * pdbOmegaDotPitchControl, \

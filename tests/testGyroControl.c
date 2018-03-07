@@ -3,6 +3,17 @@
 #include "GyroControl.h"
 #include "PIDConf.h"
 
+static void setPidParameters()
+{
+    PidParameters pidParameters = {0};
+    pidParameters.K = 1;
+    pidParameters.b = 1;
+    pidParameters.limit = 1e9;
+
+    g_gyroRollPidParameters = pidParameters;
+    g_gyroPitchPidParameters = pidParameters;
+    g_gyroYawPidParameters = pidParameters;
+}
 
 START_TEST(testGyroControlSetup)
 {
@@ -12,11 +23,10 @@ START_TEST(testGyroControlSetup)
     const double dbOmegaDotRollExpected = 0;
     const double dbOmegaDotPitchExpected = 10;
     const double dbOmegaDotYawExpected = 1e3;
+
     /* Override global PIDParameters */
-    memset(&g_tGyroParameters, 0, sizeof(g_tGyroParameters));
-    g_tGyroParameters.K = 1;
-    g_tGyroParameters.b = 1; 
-    g_tGyroParameters.limit = 1e9;
+    setPidParameters();
+
     gyroControlSetup();
     setOmegaRef(dbOmegaDotRollExpected, dbOmegaDotPitchExpected, dbOmegaDotYawExpected);
     gyroCalculateControl(&dbOmegaDotRoll, &dbOmegaDotPitch, &dbOmegaDotYaw);

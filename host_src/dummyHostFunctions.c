@@ -4,6 +4,7 @@
 #include "inttypes.h"
 #include "core_pins.h"
 #include "EscControl.h"
+#include "string.h"
 
 /* mpu9150 host */
 int16_t g_ax;
@@ -66,6 +67,16 @@ void analogWriteResolution(uint32_t bits)
     return;
 }
 
+/* EEPROM */
+uint8_t eeprom[2048];
+void eeprom_read_block(void *buf, const void *addr, uint32_t len)
+{
+  memcpy(buf, &eeprom[(uintptr_t)addr], len);
+}
+void eeprom_write_block(const void *buf, void *addr, uint32_t len)
+{
+  memcpy(&eeprom[(uintptr_t)addr], buf, len);
+}
 /* Model stuff */
 
 void setMotion6(int ax, int ay, int az, int gx, int gy, int gz)

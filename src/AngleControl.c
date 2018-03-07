@@ -18,13 +18,11 @@ void setAngleRef(double dbRollAngleRef, double dbPitchAngleRef, double dbYawAngl
 
 void angleControlSetup()
 {
-    // Setup PIDs
-    m_tPidAngleRoll = tPidSetup(g_tAngleParameters);
-    m_tPidAnglePitch = tPidSetup(g_tAngleParameters);
-    m_tPidAngleYaw = tPidSetup(g_tAngleParameters);
+    /* Setup PIDs */
+    m_tPidAngleRoll = tPidSetup(g_angleRollPidParameters);
+    m_tPidAnglePitch = tPidSetup(g_anglePitchPidParameters);
+    m_tPidAngleYaw = tPidSetup(g_angleYawPidParameters);
 }
-
-
 
 void angleCalculateControl(double * pdbOmegaRollControl, \
                               double * pdbOmegaPitchControl, \
