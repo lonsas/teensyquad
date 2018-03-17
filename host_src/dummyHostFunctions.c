@@ -35,7 +35,7 @@ void mpu9150_getMotion6(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int1
 
 
 /* core stuff */
-int analogWriteArray[100];
+int pinArray[100];
 
 void attachInterrupt(uint8_t pin, void (*function)(void), int mode)
 {
@@ -54,7 +54,7 @@ void pinMode(uint8_t pin, uint8_t mode)
 
 void analogWrite(uint8_t pin, int val)
 {
-    analogWriteArray[pin] = val;
+    pinArray[pin] = val;
 }
 
 
@@ -67,6 +67,11 @@ void analogWriteResolution(uint32_t bits)
     return;
 }
 
+uint8_t digitalRead(uint8_t pin)
+{
+    return pinArray[pin] >= 5;
+}
+
 /* EEPROM */
 uint8_t eeprom[2048];
 void eeprom_read_block(void *buf, const void *addr, uint32_t len)
@@ -77,6 +82,29 @@ void eeprom_write_block(const void *buf, void *addr, uint32_t len)
 {
   memcpy(&eeprom[(uintptr_t)addr], buf, len);
 }
+
+/* usb_serial */
+
+int usb_serial_getchar()
+{
+    return 0;
+}
+
+int usb_serial_available()
+{
+    return 0;
+}
+
+int usb_serial_read(void *buffer, uint32_t size)
+{
+    return 0;
+}
+
+int usb_serial_write(const void *buffer, uint32_t size)
+{
+    return 0;
+}
+
 /* Model stuff */
 
 void setMotion6(int ax, int ay, int az, int gx, int gy, int gz)
@@ -91,9 +119,9 @@ void setMotion6(int ax, int ay, int az, int gx, int gy, int gz)
 
 void getMotorOutput(int * motor)
 {
-    motor[0] = analogWriteArray[MOTOR0_PIN];
-    motor[1] = analogWriteArray[MOTOR1_PIN];
-    motor[2] = analogWriteArray[MOTOR2_PIN];
-    motor[3] = analogWriteArray[MOTOR3_PIN];
+    motor[0] = pinArray[MOTOR0_PIN];
+    motor[1] = pinArray[MOTOR1_PIN];
+    motor[2] = pinArray[MOTOR2_PIN];
+    motor[3] = pinArray[MOTOR3_PIN];
 }
 

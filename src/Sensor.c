@@ -31,7 +31,6 @@ void SensorGetAngle(double * pdbRollAngle, double * pdbPitchAngle, double * pdbY
     *pdbYawAngle = m_dbYawAngle;
 }
 
-
 void SensorSetup() {
     m_dbRollOmega = 0;
     m_dbPitchOmega = 0;
@@ -60,7 +59,6 @@ bool SensorOk()
 
 bool SensorAngleIsLevel()
 {
-
     return ((fabs(m_dbRollAngle) <  ANGLE_TOL)  &&
             (fabs(m_dbPitchAngle) <  ANGLE_TOL)  &&
             (fabs(m_dbYawAngle) <  ANGLE_TOL));

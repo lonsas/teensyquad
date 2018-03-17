@@ -8,6 +8,8 @@
 #define ANGLE_TOL 0.1
 #define OMEGA_TOL 0.1
 
+#define USB_VOLT_PIN 19
+
 
 /* EEPROM addresses */
 #define PID_ROLL_OMEGA_ADDR (void*)0

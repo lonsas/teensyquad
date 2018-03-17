@@ -4,6 +4,24 @@
 #include "MCUConf.h"
 #include "eeprom.h"
 
+static const PidParameters gyroDefaultPidParameters = {
+  .K = 1,
+  .Ti = 10,
+  .Td = 0,
+  .Tt = 10,
+  .b = 1,
+  .h = 0.001,
+};
+
+static const PidParameters angleDefaultPidParameters = {
+  .K = 1,
+  .Ti = 10,
+  .Td = 0,
+  .Tt = 10,
+  .b = 1,
+  .h = 0.001,
+};
+
 /* Global PID parameters */
 PidParameters g_gyroRollPidParameters;
 PidParameters g_gyroPitchPidParameters;
@@ -15,6 +33,17 @@ PidParameters g_angleYawPidParameters;
 
 static PidParameters EEPROMReadPidParameters(void * pidAddr);
 static void EEPROMWritePidParameters(void * pidAddr, PidParameters pidParameters);
+
+void PIDConfSetDefault()
+{
+  g_gyroRollPidParameters = gyroDefaultPidParameters;
+  g_gyroPitchPidParameters = gyroDefaultPidParameters;
+  g_gyroYawPidParameters = gyroDefaultPidParameters;
+
+  g_angleRollPidParameters = angleDefaultPidParameters;
+  g_anglePitchPidParameters = angleDefaultPidParameters;
+  g_angleYawPidParameters = angleDefaultPidParameters;
+}
 
 void PIDConfLoad()
 {

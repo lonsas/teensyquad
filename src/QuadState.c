@@ -6,12 +6,14 @@
 #include "Sensor.h"
 #include "MCUConf.h"
 #include "PIDConf.h"
+#include "UsbCommunication.h"
 
 
 /* Module local variables */
 static void  (*pfState)();
-static bool controlActive;
-static bool sensorActive;
+static bool m_controlActive;
+static bool m_sensorActive;
+static bool m_usbActive;
 static bool prevArmSignal;
 static enum state tCurrState;
 
@@ -30,6 +32,7 @@ static void transition(void(*pfNextStateEntry)())
 static void stateStartup();
 static void stateReadyWait();
 static void stateArmed();
+static void stateUsbConnected();
 
 /* Update functions */
 static void stateStartupUpdate();
@@ -40,13 +43,15 @@ static void stateStartup()
 {
     tCurrState = STARTUP;
     receiverSetup();
-    PIDConfLoad();
+    usbSetup();
+    /*PIDConfLoad(); */
+    PIDConfSetDefault();
     controlSetup();
     SensorSetup();
     EscControlSetup();
 
-    sensorActive = true;
-    controlActive = false;
+    m_sensorActive = true;
+    m_controlActive = false;
 
     entryDone(&stateStartupUpdate);
 }
@@ -57,7 +62,6 @@ static void stateStartupUpdate()
     if(receiverOk() && SensorOk()) {
         transition(&stateReadyWait);
     }
-
 }
 
 static void stateReadyWait()
@@ -69,6 +73,10 @@ static void stateReadyWait()
 
 static void stateReadyWaitUpdate()
 {
+    /* USB? */
+    if(usbConnected()) {
+      transition(&stateUsbConnected);
+    }
     /* Arm? */
     if(!prevArmSignal && receiverSignalHigh(AUX1)) {
         if(receiverSignalLow(THROTTLE) &&
@@ -87,7 +95,7 @@ static void stateArmed()
     tCurrState = ARMED;
     controlReset();
     EscControlArm();
-    controlActive = true;
+    m_controlActive = true;
 
     entryDone(&stateArmedUpdate);
 }
@@ -95,18 +103,27 @@ static void stateArmed()
 static void stateArmedUpdate()
 {
     /* Disarm? */
-    if(receiverSignalLow(AUX1)) {
+    if(receiverSignalLow(AUX1) && receiverSignalLow(THROTTLE)) {
         EscControlDisarm();
-        controlActive = false;
+        m_controlActive = false;
         transition(&stateReadyWait);
     }
 }
+
+static void stateUsbConnected()
+{
+    m_usbActive = true;
+    if(!usbConnected())
+    {
+        transition(stateReadyWait);
+    }
+}
+
 
 enum state getCurrState()
 {
     return tCurrState;
 }
-
 
 void stateUpdate()
 {
@@ -115,17 +132,20 @@ void stateUpdate()
 
 void stateDo()
 {
-        if(sensorActive) {
+        if(m_sensorActive) {
             SensorUpdate();
         }
-        if(controlActive) {
+        if(m_controlActive) {
             doControl();
+        }
+        if(m_usbActive) {
+            usbUpdate();
         }
 }
 
 void stateInit()
 {
-    sensorActive = false;
-    controlActive = false;
+    m_sensorActive = false;
+    m_controlActive = false;
     transition(&stateStartup);
 }

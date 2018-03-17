@@ -5,7 +5,12 @@
 #include "Receiver.h"
 #include "EscControl.h"
 
+#ifndef PI
+#define PI 3.1415
+#endif
 
+#define MAX_ANGLE PI*0.25
+#define MAX_OMEGA PI*2
 
 void controlSetup()
 {
@@ -36,6 +41,12 @@ void doControl() {
 
     receiverGetControls(&throttle, &rollRef, &pitchRef, &yawOmegaRef);
 
+    /* Convert the receiver controls to relevant units */
+    /* TODO: Make the scalings tunable */
+    rollRef *= MAX_ANGLE;
+    pitchRef *= MAX_ANGLE;
+    yawOmegaRef *= MAX_OMEGA;
+
     setAngleRef(rollRef, pitchRef, 0); /* No yaw angle control */
     angleCalculateControl(&rollOmegaRef, &pitchOmegaRef, &dummy);
 
@@ -45,6 +56,4 @@ void doControl() {
     mix(throttle, 12, &rollOmegaDot, &pitchOmegaDot, &yawOmegaDot, output);
     EscControlOutput(output);
 }
-
-
 

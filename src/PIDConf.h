@@ -11,6 +11,7 @@ extern PidParameters g_angleRollPidParameters;
 extern PidParameters g_anglePitchPidParameters;
 extern PidParameters g_angleYawPidParameters;
 
+void PIDConfSetDefault();
 void PIDConfLoad();
 void PIDConfSave();
 

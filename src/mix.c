@@ -42,7 +42,7 @@ void unmix(double *roll, double *pitch, double *yaw, double *mixed) {
 }
 
 void mixOutput(double throttle, double dbBatVolt, double *mixed, double *output) {
-    
+    /* Mix in the throttle percentage with the already mixed signals given in volt */
     if(throttle > THROTTLE_MAX) {
         throttle = THROTTLE_MAX;
     }
@@ -58,7 +58,6 @@ void mixOutput(double throttle, double dbBatVolt, double *mixed, double *output)
         output[i] = mixed[i]/dbBatVolt;
     }
 }
-    
 
 void mix(double throttle, double dbBatVolt, double *pitch, double *roll, double *yaw, double *output) {
     double mixed[4];

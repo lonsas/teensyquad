@@ -1,7 +1,7 @@
 #include <check.h>
 #include "EscControl.h"
 
-extern int analogWriteArray[100];
+extern int pinArray[100];
 
 static double scale(double val)
 {
@@ -13,10 +13,10 @@ START_TEST(testEscSetup)
 {
     EscControlSetup();
     ck_assert(!EscControlIsArmed());
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR0_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR1_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR2_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR3_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR0_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR1_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR2_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR3_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
 }
 END_TEST
 
@@ -25,10 +25,10 @@ START_TEST(testEscArm)
     EscControlSetup();
     EscControlArm();
     ck_assert(EscControlIsArmed());
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR0_PIN], MOTOR_MICROS_ARM*SCALING, 1.5e-0);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR1_PIN], MOTOR_MICROS_ARM*SCALING, 1.5e-0);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR2_PIN], MOTOR_MICROS_ARM*SCALING, 1.5e-0);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR3_PIN], MOTOR_MICROS_ARM*SCALING, 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR0_PIN], MOTOR_MICROS_ARM*SCALING, 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR1_PIN], MOTOR_MICROS_ARM*SCALING, 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR2_PIN], MOTOR_MICROS_ARM*SCALING, 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR3_PIN], MOTOR_MICROS_ARM*SCALING, 1.5e-0);
 }
 END_TEST
 
@@ -38,10 +38,10 @@ START_TEST(testEscDisarm)
     EscControlArm();
     EscControlDisarm();
     ck_assert(!EscControlIsArmed());
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR0_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR1_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR2_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR3_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR0_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR1_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR2_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR3_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
 }
 END_TEST
 
@@ -55,10 +55,10 @@ START_TEST(testEscOutput)
     EscControlSetup();
     EscControlArm();
     EscControlOutput(motor);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR0_PIN], scale(motor[0]), 1.5e-0);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR1_PIN], scale(motor[1]), 1.5e-0);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR2_PIN], scale(motor[2]), 1.5e-0);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR3_PIN], scale(motor[3]), 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR0_PIN], scale(motor[0]), 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR1_PIN], scale(motor[1]), 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR2_PIN], scale(motor[2]), 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR3_PIN], scale(motor[3]), 1.5e-0);
 }
 END_TEST
 
@@ -72,10 +72,10 @@ START_TEST(testEscSaturationUpper)
     EscControlSetup();
     EscControlArm();
     EscControlOutput(motor);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR0_PIN], scale(1), 1.5e-0);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR1_PIN], scale(1), 1.5e-0);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR2_PIN], scale(1), 1.5e-0);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR3_PIN], scale(1), 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR0_PIN], scale(1), 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR1_PIN], scale(1), 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR2_PIN], scale(1), 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR3_PIN], scale(1), 1.5e-0);
 }
 END_TEST
 
@@ -89,10 +89,10 @@ START_TEST(testEscSaturationLower)
     EscControlSetup();
     EscControlArm();
     EscControlOutput(motor);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR0_PIN], scale(MOTOR_MIN), 1.5e-0);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR1_PIN], scale(MOTOR_MIN), 1.5e-0);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR2_PIN], scale(MOTOR_MIN), 1.5e-0);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR3_PIN], scale(MOTOR_MIN), 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR0_PIN], scale(MOTOR_MIN), 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR1_PIN], scale(MOTOR_MIN), 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR2_PIN], scale(MOTOR_MIN), 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR3_PIN], scale(MOTOR_MIN), 1.5e-0);
 }
 END_TEST
 
@@ -106,10 +106,10 @@ START_TEST(testEscDisarmOutput)
     motor[2] = 0.1;
     motor[3] = MOTOR_MIN + 1e-3;
     EscControlOutput(motor);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR0_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR1_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR2_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
-    ck_assert_double_eq_tol(analogWriteArray[MOTOR3_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR0_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR1_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR2_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
+    ck_assert_double_eq_tol(pinArray[MOTOR3_PIN], MOTOR_MICROS_OFF*SCALING, 1.5e-0);
 }
 END_TEST
 
