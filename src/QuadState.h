@@ -5,6 +5,7 @@ enum state {
     STARTUP,
     READY_WAIT,
     ARMED,
+    USB_CONNECTED,
 };
 
 void stateUpdate();

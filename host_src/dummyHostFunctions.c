@@ -84,25 +84,37 @@ void eeprom_write_block(const void *buf, void *addr, uint32_t len)
 }
 
 /* usb_serial */
+#define USB_BUFFER_SIZE 8192
+uint8_t usbInputBuffer[USB_BUFFER_SIZE];
+uint8_t usbOutputBuffer[USB_BUFFER_SIZE];
+unsigned int usbInputCurrIdx = 0;
+unsigned int usbInputEndIdx = 0;
+unsigned int usbOutputCurrIdx = 0;
+unsigned int usbOutputEndIdx = 0;
 
 int usb_serial_getchar()
 {
-    return 0;
+    if(usbInputCurrIdx < usbInputEndIdx) {
+        return usbInputBuffer[(usbInputCurrIdx++) % USB_BUFFER_SIZE];
+    } else {
+        return -1;
+    }
 }
 
 int usb_serial_available()
 {
-    return 0;
-}
-
-int usb_serial_read(void *buffer, uint32_t size)
-{
-    return 0;
+    if((usbInputCurrIdx >= USB_BUFFER_SIZE) && (usbInputEndIdx >= USB_BUFFER_SIZE)) {
+        usbInputEndIdx = usbInputEndIdx % USB_BUFFER_SIZE;
+        usbInputCurrIdx = usbInputCurrIdx % USB_BUFFER_SIZE;
+    }
+    return usbInputEndIdx - usbInputCurrIdx;
 }
 
 int usb_serial_write(const void *buffer, uint32_t size)
 {
-    return 0;
+    memcpy(&usbOutputBuffer[usbOutputEndIdx], buffer, size);
+    usbOutputEndIdx += size;
+    return size;
 }
 
 /* Model stuff */

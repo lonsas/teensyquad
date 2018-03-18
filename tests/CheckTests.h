@@ -7,3 +7,4 @@ Suite * MixSuite(void);
 Suite * SensorSuite(void);
 Suite * QuadStateSuite(void);
 Suite * EscControlSuite(void);
+Suite * UsbCommunicationSuite(void);

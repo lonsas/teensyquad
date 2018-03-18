@@ -7,18 +7,24 @@
 #include <string.h>
 #include "PIDConf.h"
 #include "Sensor.h"
+#include "COBS.h"
+#include <alloca.h>
 
 static bool m_correctData;
 static bool m_sendLog;
 
-static size_t StuffData(const uint8_t *ptr, size_t length, uint8_t *dst);
-static size_t UnStuffData(const uint8_t *ptr, size_t length, uint8_t *dst);
-static void sendPacket(uint32_t command, void * data, size_t length);
+
+static void sendPacket(void * data, size_t length);
 static void sendLog();
 static bool receiveData(void * commandBuf, size_t * commandLength);
 static void commandDo(void * commandBuf, size_t length);
 static void receivePidParameters(double * pidParameterSet);
 static void sendPidParameters();
+
+struct command {
+    uint32_t command;
+    uint8_t data[];
+};
 
 void usbSetup()
 {
@@ -44,8 +50,8 @@ void usbUpdate()
 
 static void commandDo(void * commandBuf, size_t length)
 {
-    uint32_t command = ((uint32_t *)commandBuf)[0];
-    switch(command) {
+    uint32_t * command = commandBuf;
+    switch(command[0]) {
         case(USB_LOG_START):
             m_sendLog = true;
             break;
@@ -53,40 +59,42 @@ static void commandDo(void * commandBuf, size_t length)
             m_sendLog = false;
             break;
         case(USB_WRITE_PID):
-            if((length - 1) != USB_PID_LENGTH) {
+            if((length - 1) == USB_PID_LENGTH) {
                 receivePidParameters(commandBuf + sizeof(uint32_t));
+            } else {
+                sendPacket(USB_LOG_INVALID, sizeof(command));
             }
             break;
         case(USB_READ_PID):
             sendPidParameters();
             break;
         default:
-            sendPacket(USB_LOG_INVALID, NULL, 0);
+            sendPacket(USB_LOG_INVALID, sizeof(command));
             break;
     }
 
 }
-static void sendPacket(uint32_t command, void * data, size_t length)
+static void sendPacket(void * data, size_t length)
 {
     /* FIXME: too much memory copying... */
-    uint8_t dataBuf[USB_DATA_MAX_SIZE];
     uint8_t usbPacket[USB_DATA_MAX_SIZE];
     size_t size;
 
-    dataBuf[0] = command;
-    memcpy(&dataBuf[1], data, length);
-    dataBuf[length + 1] = 0;
-    size = StuffData(dataBuf, length + 2, usbPacket);
+    size = StuffData(data, length, usbPacket);
     usb_serial_write(usbPacket, size);
 }
 
 static void sendLog()
 {
-    double sensorData[6];
-
-    SensorGetOmega(&sensorData[0], &sensorData[1], &sensorData[2]);
-    SensorGetAngle(&sensorData[3], &sensorData[4], &sensorData[5]);
-    sendPacket(USB_LOG_SENSOR, sensorData, 6);
+    size_t command_size = sizeof(uint32_t) + 6 * sizeof(double);
+    struct command * command = alloca(command_size);
+    command->command = USB_LOG_SENSOR;
+    double * sensorData = (void *)command->data;
+    if(m_sendLog) {
+        SensorGetOmega(&sensorData[0], &sensorData[1], &sensorData[2]);
+        SensorGetAngle(&sensorData[3], &sensorData[4], &sensorData[5]);
+        sendPacket(command, command_size);
+    }
 }
 
 static bool receiveData(void * commandBuf, size_t * commandLength)
@@ -98,22 +106,24 @@ static bool receiveData(void * commandBuf, size_t * commandLength)
     /* Wait for 0 indicating start of new package */
     if(!m_correctData) {
         for(count = 0; count < USB_DATA_MAX_SIZE; count++) {
-        if(usb_serial_available()) {
-            data = usb_serial_getchar();
-        } else {
-            return false;
+            if(usb_serial_available()) {
+                data = usb_serial_getchar();
+            } else {
+                return false;
+            }
+            if(data == 0) {
+                m_correctData = true;
+                break;
+            }
         }
-        if(data == 0) {
-            count = 0;
-            break;
-        }
-      }
+    }
+    if(!m_correctData) {
+        return false;
     }
     for(count = 0; count < USB_DATA_MAX_SIZE; count++) {
         if(usb_serial_available()) {
             dataBuf[count] = usb_serial_getchar();
             if(dataBuf[count] == 0) {
-                m_correctData = true;
                 break;
             }
         } else {
@@ -148,7 +158,8 @@ static void receivePidParameters(double * pidParameterSets)
 
 static void sendPidParameters()
 {
-    uint8_t data[USB_PID_LENGTH];
+    size_t command_size = sizeof(uint32_t) + 6 * sizeof(PidParameters);
+    struct command * command = alloca(command_size);
     PidParameters * currParameterSet[6] = {
         &g_gyroRollPidParameters,
         &g_gyroPitchPidParameters,
@@ -159,71 +170,12 @@ static void sendPidParameters()
     };
     for(int i = 0; i < 6; i++) {
         /* PidParameters only contain double, no packing issues */
-        memcpy(&data[i * sizeof(PidParameters)],
+        memcpy(&command->data[i * sizeof(PidParameters)],
                currParameterSet[i],
                sizeof(PidParameters));
     }
-    sendPacket(USB_READ_PID, data, USB_PID_LENGTH);
+    sendPacket(command, command_size);
 }
 
 
-/**********************************************************************
- * COBS, wikipedia implementation
- *********************************************************************/
-/*
- * StuffData byte stuffs "length" bytes of data
- * at the location pointed to by "ptr", writing
- * the output to the location pointed to by "dst".
- *
- * Returns the length of the encoded data, which is
- * guaranteed to be <= length + 1 + (length - 1)/254.
- */
-#define FinishBlock() (*code_ptr = code, code_ptr = dst++, code = 0x01)
-
-static size_t StuffData(const uint8_t *ptr, size_t length, uint8_t *dst)
-{
-  const uint8_t *start = dst, *end = ptr + length;
-  uint8_t *code_ptr = dst++;  /* Where to insert the leading count */
-  uint8_t code = 0x01;
-
-  for (; ptr < end; ptr++) {
-    if (*ptr != 0) {
-      *dst++ = *ptr;
-      if (++code != 0xFF)
-        continue;
-    }
-    FinishBlock();
-  }
-
-  FinishBlock();
-  return dst - start;
-}
-
-/*
- * UnStuffData decodes "length" bytes of data at
- * the location pointed to by "ptr", writing the
- * output to the location pointed to by "dst".
- *
- * Returns the length of the decoded data (which is
- * guaranteed to be <= length.)
- */
-static size_t UnStuffData(const uint8_t *ptr, size_t length, uint8_t *dst)
-{
-  const uint8_t *start = dst, *end = ptr + length;
-  uint8_t code = 0xFF, copy = 0;
-
-  while (ptr < end) {
-    if (copy != 0) {
-      *dst++ = *ptr++;
-    } else {
-      if (code != 0xFF)
-        *dst++ = 0;
-      copy = code = *ptr++;
-      if (code == 0)
-        break;   /* Should never happen */
-    }
-    copy--;
-  }
-  return dst - start;
-}
 

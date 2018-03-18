@@ -12,6 +12,7 @@
 
 #define HIGH 1
 #define LOW 0
+extern int pinArray[];
 
 void attachInterrupt(uint8_t pin, void (*function)(void), int mode);
 uint32_t micros(void);

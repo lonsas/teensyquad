@@ -1,7 +1,8 @@
 #include <check.h>
 #include "QuadState.h"
 #include "Receiver.h"
-
+#include "MCUConf.h"
+#include "dummyHostFunction.h"
 
 extern int16_t g_ax;
 extern int16_t g_gx;
@@ -133,6 +134,18 @@ START_TEST(createCoverage)
 }
 END_TEST
 
+START_TEST(testUsb)
+{
+    gotoReadyWait();
+    pinArray[USB_VOLT_PIN] = 5;
+    stateUpdate();
+    ck_assert_int_eq(getCurrState(), USB_CONNECTED);
+    pinArray[USB_VOLT_PIN] = 0;
+    stateUpdate();
+    ck_assert_int_eq(getCurrState(), READY_WAIT);
+}
+END_TEST
+
 Suite * QuadStateSuite(void)
 {
     Suite *s;
@@ -151,6 +164,7 @@ Suite * QuadStateSuite(void)
     tcase_add_test(tc_core, testStateArmConditionSensor);
     tcase_add_test(tc_core, testStateArmConditionReset);
     tcase_add_test(tc_core, createCoverage);
+    tcase_add_test(tc_core, testUsb);
     suite_add_tcase(s, tc_core);
 
     return s;

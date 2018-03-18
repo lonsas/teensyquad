@@ -38,6 +38,7 @@ static void stateUsbConnected();
 static void stateStartupUpdate();
 static void stateReadyWaitUpdate();
 static void stateArmedUpdate();
+static void stateUsbConnectedUpdate();
 
 static void stateStartup()
 {
@@ -112,10 +113,17 @@ static void stateArmedUpdate()
 
 static void stateUsbConnected()
 {
+    tCurrState = USB_CONNECTED;
     m_usbActive = true;
+    entryDone(&stateUsbConnectedUpdate);
+}
+
+static void stateUsbConnectedUpdate()
+{
     if(!usbConnected())
     {
-        transition(stateReadyWait);
+        m_usbActive = false;
+        transition(&stateReadyWait);
     }
 }
 
