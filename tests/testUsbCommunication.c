@@ -4,11 +4,17 @@
 #include "COBS.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <alloca.h>
+#include "PIDConf.h"
 
-struct command {
-    uint32_t command;
-    uint8_t data[];
+static PidParameters dummyPidParameters = {
+  .K = 1,
+  .Ti = 10,
+  .Td = 0,
+  .Tt = 10,
+  .b = 1,
+  .h = 0.001,
+  .N = 10,
+  .limit = 1e9,
 };
 
 static size_t dummyUsbReceive(uint8_t * buffer)
@@ -48,12 +54,8 @@ END_TEST
 
 START_TEST(testSendResponse)
 {
-    struct command * command;
-    command = malloc(sizeof(command));
-    command->command = USB_LOG_START;
-    usbInputEndIdx += StuffData((uint8_t *)command, sizeof(command->command), &usbInputBuffer[usbInputEndIdx]);
-    free(command);
-    usbInputBuffer[usbInputEndIdx++] = 0;
+    Command command = USB_LOG_START;
+    usbInputEndIdx += StuffData((uint8_t *)&command, sizeof(command), &usbInputBuffer[usbInputEndIdx]);
 
     usbUpdate();
     /* Make sure something is sent */
@@ -65,37 +67,73 @@ END_TEST
 
 START_TEST(testLog)
 {
-    struct command * command;
-    struct command * response;
+    Command command = USB_LOG_START;
+    struct UsbLogPacket response;
     uint8_t usbBuffer[USB_DATA_MAX_SIZE];
     size_t responseLength;
     size_t usbBufferLength;
 
-    command = alloca(sizeof(command));
-    response = alloca(USB_DATA_MAX_SIZE);
-
     /* Set command to start logging */
-    command->command = USB_LOG_START;
-    usbInputEndIdx += StuffData((uint8_t *)command, sizeof(command->command), &usbInputBuffer[usbInputEndIdx]);
+    usbInputEndIdx += StuffData((uint8_t *)&command, sizeof(command), &usbInputBuffer[usbInputEndIdx]);
 
     /* Check that log data is sent back */
     for(int i = 0; i < 10; i++) {
         usbUpdate();
         usbBufferLength = dummyUsbReceive(usbBuffer);
-        responseLength = UnStuffData(usbBuffer, usbBufferLength - 1, (uint8_t *)response);
+        responseLength = UnStuffData(usbBuffer, usbBufferLength - 1, (uint8_t *)&response);
 
-        ck_assert_int_eq(response->command, USB_LOG_SENSOR);
-        ck_assert_int_eq(responseLength, sizeof(uint32_t) + 6*sizeof(double));
+        ck_assert_int_eq(response.command, USB_LOG_SENSOR);
+        ck_assert_int_eq(responseLength, sizeof(response));
     }
 
     /* Turn of data logging */
-    command->command = USB_LOG_STOP;
-    usbInputEndIdx += StuffData((uint8_t *)command, sizeof(command->command), &usbInputBuffer[usbInputEndIdx]);
+    command = USB_LOG_STOP;
+    usbInputEndIdx += StuffData((uint8_t *)&command, sizeof(command), &usbInputBuffer[usbInputEndIdx]);
 
     /* Check that there is no more data output */
     usbUpdate();
     usbBufferLength = dummyUsbReceive(usbBuffer);
     ck_assert_int_eq(usbBufferLength, 0);
+}
+END_TEST
+
+START_TEST(testReadPidParameters)
+{
+    Command command = USB_READ_GYRO_PID;
+    struct UsbPidPacket response;
+    uint8_t usbBuffer[USB_DATA_MAX_SIZE];
+    size_t responseLength;
+    size_t usbBufferLength;
+
+
+    memcpy(&g_gyroRollPidParameters, &dummyPidParameters, sizeof(PidParameters));
+    usbInputEndIdx += StuffData((uint8_t *)&command, sizeof(command), &usbInputBuffer[usbInputEndIdx]);
+
+    usbUpdate();
+    usbBufferLength = dummyUsbReceive(usbBuffer);
+    responseLength = UnStuffData(usbBuffer, usbBufferLength - 1, (uint8_t *)&response);
+
+    ck_assert_int_eq(response.command, USB_READ_GYRO_PID);
+    ck_assert_int_eq(responseLength, sizeof(response));
+    ck_assert_mem_eq(&response.pidParameters[0], &dummyPidParameters, sizeof(PidParameters));
+}
+END_TEST
+
+START_TEST(testWritePidParameters)
+{
+    struct UsbPidPacket command;
+
+    command.command = USB_WRITE_GYRO_PID;
+
+    memcpy(&command.pidParameters[0], &dummyPidParameters, sizeof(PidParameters));
+    usbInputEndIdx += StuffData((uint8_t *)&command, sizeof(command), &usbInputBuffer[usbInputEndIdx]);
+
+    usbUpdate();
+
+    ck_assert_mem_eq(&dummyPidParameters, &g_gyroRollPidParameters, sizeof(PidParameters));
+
+    /* No response */
+    ck_assert_int_eq(usbOutputEndIdx, 0);
 }
 END_TEST
 
@@ -112,6 +150,8 @@ Suite * UsbCommunicationSuite(void)
     tcase_add_test(tc_core, testUpdateEmpty);
     tcase_add_test(tc_core, testSendResponse);
     tcase_add_test(tc_core, testLog);
+    tcase_add_test(tc_core, testReadPidParameters);
+    tcase_add_test(tc_core, testWritePidParameters);
     suite_add_tcase(s, tc_core);
 
     return s;

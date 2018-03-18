@@ -18,13 +18,10 @@ static void sendPacket(void * data, size_t length);
 static void sendLog();
 static bool receiveData(void * commandBuf, size_t * commandLength);
 static void commandDo(void * commandBuf, size_t length);
-static void receivePidParameters(double * pidParameterSet);
-static void sendPidParameters();
-
-struct command {
-    uint32_t command;
-    uint8_t data[];
-};
+static void receiveGyroPidParameters(struct UsbPidPacket * packet);
+static void receiveAnglePidParameters(struct UsbPidPacket * packet);
+static void sendGyroPidParameters();
+static void sendAnglePidParameters();
 
 void usbSetup()
 {
@@ -58,15 +55,25 @@ static void commandDo(void * commandBuf, size_t length)
         case(USB_LOG_STOP):
             m_sendLog = false;
             break;
-        case(USB_WRITE_PID):
-            if((length - 1) == USB_PID_LENGTH) {
-                receivePidParameters(commandBuf + sizeof(uint32_t));
+        case(USB_WRITE_GYRO_PID):
+            if(length == sizeof(struct UsbPidPacket)) {
+                receiveGyroPidParameters(commandBuf);
             } else {
                 sendPacket(USB_LOG_INVALID, sizeof(command));
             }
             break;
-        case(USB_READ_PID):
-            sendPidParameters();
+        case(USB_WRITE_ANGLE_PID):
+            if(length == sizeof(struct UsbPidPacket)) {
+                receiveAnglePidParameters(commandBuf);
+            } else {
+                sendPacket(USB_LOG_INVALID, sizeof(command));
+            }
+            break;
+        case(USB_READ_GYRO_PID):
+            sendGyroPidParameters();
+            break;
+        case(USB_READ_ANGLE_PID):
+            sendAnglePidParameters();
             break;
         default:
             sendPacket(USB_LOG_INVALID, sizeof(command));
@@ -76,7 +83,6 @@ static void commandDo(void * commandBuf, size_t length)
 }
 static void sendPacket(void * data, size_t length)
 {
-    /* FIXME: too much memory copying... */
     uint8_t usbPacket[USB_DATA_MAX_SIZE];
     size_t size;
 
@@ -86,14 +92,14 @@ static void sendPacket(void * data, size_t length)
 
 static void sendLog()
 {
-    size_t command_size = sizeof(uint32_t) + 6 * sizeof(double);
-    struct command * command = alloca(command_size);
-    command->command = USB_LOG_SENSOR;
-    double * sensorData = (void *)command->data;
+    struct UsbLogPacket packet;
+    size_t size = sizeof(packet);
+    double * sensorData = packet.sensorData;
+    packet.command = USB_LOG_SENSOR;
     if(m_sendLog) {
         SensorGetOmega(&sensorData[0], &sensorData[1], &sensorData[2]);
         SensorGetAngle(&sensorData[3], &sensorData[4], &sensorData[5]);
-        sendPacket(command, command_size);
+        sendPacket(&packet, size);
     }
 }
 
@@ -136,46 +142,76 @@ static bool receiveData(void * commandBuf, size_t * commandLength)
     return true;
 }
 
-static void receivePidParameters(double * pidParameterSets)
+static void receiveGyroPidParameters(struct UsbPidPacket * packet)
 {
-    PidParameters * currParameterSet[6] = {
+    PidParameters * currParameterSet[3] = {
         &g_gyroRollPidParameters,
         &g_gyroPitchPidParameters,
         &g_gyroYawPidParameters,
-        &g_angleRollPidParameters,
-        &g_anglePitchPidParameters,
-        &g_angleYawPidParameters,
     };
-    for(int i = 0; i < 6; i++) {
+    for(int i = 0; i < 3; i++) {
         /* PidParameters only contain double, no packing issues */
         memcpy(currParameterSet[i],
-               &pidParameterSets[i * sizeof(PidParameters)],
+               &packet->pidParameters[i],
                sizeof(PidParameters));
     }
     PIDConfSave();
 
 }
 
-static void sendPidParameters()
+static void receiveAnglePidParameters(struct UsbPidPacket * packet)
 {
-    size_t command_size = sizeof(uint32_t) + 6 * sizeof(PidParameters);
-    struct command * command = alloca(command_size);
-    PidParameters * currParameterSet[6] = {
-        &g_gyroRollPidParameters,
-        &g_gyroPitchPidParameters,
-        &g_gyroYawPidParameters,
+    PidParameters * currParameterSet[3] = {
+
         &g_angleRollPidParameters,
         &g_anglePitchPidParameters,
         &g_angleYawPidParameters,
     };
-    for(int i = 0; i < 6; i++) {
+    for(int i = 0; i < 3; i++) {
         /* PidParameters only contain double, no packing issues */
-        memcpy(&command->data[i * sizeof(PidParameters)],
+        memcpy(currParameterSet[i],
+               &packet->pidParameters[i],
+               sizeof(PidParameters));
+    }
+    PIDConfSave();
+
+}
+
+static void sendGyroPidParameters()
+{
+    struct UsbPidPacket packet;
+    size_t size = sizeof(packet);
+    packet.command = USB_READ_GYRO_PID;
+    PidParameters * currParameterSet[3] = {
+        &g_gyroRollPidParameters,
+        &g_gyroPitchPidParameters,
+        &g_gyroYawPidParameters,
+
+    };
+    for(int i = 0; i < 3; i++) {
+        /* PidParameters only contain double, no packing issues */
+        memcpy(&packet.pidParameters[i],
                currParameterSet[i],
                sizeof(PidParameters));
     }
-    sendPacket(command, command_size);
+    sendPacket(&packet, size);
 }
 
-
-
+static void sendAnglePidParameters()
+{
+    struct UsbPidPacket packet;
+    size_t size = sizeof(packet);
+    packet.command = USB_READ_ANGLE_PID;
+    PidParameters * currParameterSet[3] = {
+        &g_angleRollPidParameters,
+        &g_anglePitchPidParameters,
+        &g_angleYawPidParameters,
+    };
+    for(int i = 0; i < 3; i++) {
+        /* PidParameters only contain double, no packing issues */
+        memcpy(&packet.pidParameters[i],
+               currParameterSet[i],
+               sizeof(PidParameters));
+    }
+    sendPacket(&packet, size);
+}
