@@ -47,7 +47,7 @@ void usbUpdate()
 
 static void commandDo(void * commandBuf, size_t length)
 {
-    uint32_t * command = commandBuf;
+    Command * command = commandBuf;
     switch(command[0]) {
         case(USB_LOG_START):
             m_sendLog = true;
@@ -59,14 +59,14 @@ static void commandDo(void * commandBuf, size_t length)
             if(length == sizeof(struct UsbPidPacket)) {
                 receiveGyroPidParameters(commandBuf);
             } else {
-                sendPacket(USB_LOG_INVALID, sizeof(command));
+                sendPacket(USB_INVALID, sizeof(command));
             }
             break;
         case(USB_WRITE_ANGLE_PID):
             if(length == sizeof(struct UsbPidPacket)) {
                 receiveAnglePidParameters(commandBuf);
             } else {
-                sendPacket(USB_LOG_INVALID, sizeof(command));
+                sendPacket(USB_INVALID, sizeof(command));
             }
             break;
         case(USB_READ_GYRO_PID):
@@ -76,7 +76,7 @@ static void commandDo(void * commandBuf, size_t length)
             sendAnglePidParameters();
             break;
         default:
-            sendPacket(USB_LOG_INVALID, sizeof(command));
+            sendPacket(USB_INVALID, sizeof(command));
             break;
     }
 
