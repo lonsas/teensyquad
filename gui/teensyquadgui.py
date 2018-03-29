@@ -6,23 +6,19 @@ from PyQt4 import QtCore
 import design
 import serial
 from serial.tools import list_ports
-from construct import Struct, UBInt8, SBInt16, UBInt32, SLInt16, ULInt32, ULInt8, SLInt32, LFloat32
+from construct import *
 from pyqtgraph.ptime import time
 import pyqtgraph
+from cobs import cobs
+from enum import Enum
 
-sensorStruct = Struct("datastruct",
-                      LFloat32("accx"),
-                      LFloat32("accy"),
-                      LFloat32("accz"),
-                      LFloat32("gyrox"),
-                      LFloat32("gyroy"),
-                      LFloat32("gyroz"),
-
-                    ULInt32("t"),
-                    ULInt32("dt"),
-                    LFloat32("pitch"),
-                    LFloat32("roll"),
-                    LFloat32("yaw"))
+sensorStruct = AlignedStruct(8, "command" / Int8ul,
+                      "gyrox" / Float64l,
+                      "gyroy" / Float64l,
+                      "gyroz" / Float64l,
+                      "accx" / Float64l,
+                      "accy" / Float64l,
+                      "accz" / Float64l)
 
 pyqtgraph.setConfigOption('background', 'w')
 pyqtgraph.setConfigOption('foreground', 'k')
@@ -36,27 +32,26 @@ class TeensyGUI(QtGui.QMainWindow, design.Ui_MainWindow):
         #self.measurementPlot.setClipToView(True)
         self.measurementPlot.setLimits(yMax=2**15, yMin=-2**15)
 
-        self.accxCurve = self.measurementPlot.plot(pen=(0, 6))
+        self.accxCurve = self.measurementPlot.plot(pen='r')
         self.accx = []
-        self.accyCurve = self.measurementPlot.plot(pen=(1, 6))
+        self.accyCurve = self.measurementPlot.plot(pen='g')
         self.accy = []
-        self.acczCurve = self.measurementPlot.plot(pen=(2, 6))
+        self.acczCurve = self.measurementPlot.plot(pen='b')
         self.accz = []
-        self.gyroxCurve = self.measurementPlot.plot(pen=(3, 6))
+        self.gyroxCurve = self.outputPlot.plot(pen='r')
         self.gyrox = []
-        self.gyroyCurve = self.measurementPlot.plot(pen=(4, 6))
+        self.gyroyCurve = self.outputPlot.plot(pen='g')
         self.gyroy = []
-        self.gyrozCurve = self.measurementPlot.plot(pen=(5, 6))
+        self.gyrozCurve = self.outputPlot.plot(pen='b')
         self.gyroz = []
-        self.gyroxCurve = self.measurementPlot.plot(pen=(3, 6))
 
 
-        self.pitchCurve = self.outputPlot.plot(pen=(0, 3))
-        self.pitch = []
-        self.rollCurve = self.outputPlot.plot(pen=(1, 3))
-        self.roll = []
-        self.yawCurve = self.outputPlot.plot(pen=(2, 3))
-        self.yaw = []
+        #self.pitchCurve = self.outputPlot.plot(pen=(0, 3))
+        #self.pitch = []
+        #self.rollCurve = self.outputPlot.plot(pen=(1, 3))
+        #self.roll = []
+        #self.yawCurve = self.outputPlot.plot(pen=(2, 3))
+        #self.yaw = []
 
 
         self.startTime = time()
@@ -78,28 +73,29 @@ class TeensyGUI(QtGui.QMainWindow, design.Ui_MainWindow):
         self.gyrox.append(data.gyrox)
         self.gyroy.append(data.gyroy)
         self.gyroz.append(data.gyroz)
-        self.pitch.append(data.pitch)
-        self.roll.append(data.roll)
-        self.yaw.append(data.yaw)
-        self.plottime.append(data.t/1000000)
-        self.dt = data.dt
+#        self.pitch.append(data.pitch)
+#        self.roll.append(data.roll)
+#        self.yaw.append(data.yaw)
+#        self.plottime.append(data.t/1000000)
+#        self.dt = data.dt
 
 
     def updatePlots(self):
-        len = 10**5 # Not too much data to plot, clipping is horrible
-        self.accxCurve.setData(self.plottime[-len:], self.accx[-len:])
-        self.accyCurve.setData(self.plottime[-len:], self.accy[-len:])
-        self.acczCurve.setData(self.plottime[-len:], self.accz[-len:])
-        self.gyroxCurve.setData(self.plottime[-len:], self.gyrox[-len:])
-        self.gyroyCurve.setData(self.plottime[-len:], self.gyroy[-len:])
-        self.gyrozCurve.setData(self.plottime[-len:], self.gyroz[-len:])
+        length = 10**5 # Not too much data to plot, clipping is horrible
+        self.plottime = [i for i in range(len(self.accx[-length:]))]
+        self.accxCurve.setData(self.plottime, self.accx[-length:])
+        self.accyCurve.setData(self.plottime, self.accy[-length:])
+        #self.acczCurve.setData(self.plottime, self.accz[-length:])
+        self.gyroxCurve.setData(self.plottime, self.gyrox[-length:])
+        self.gyroyCurve.setData(self.plottime, self.gyroy[-length:])
+        self.gyrozCurve.setData(self.plottime, self.gyroz[-length:])
 
-        self.rollCurve.setData(self.plottime[-len:], self.pitch[-len:])
-        self.pitchCurve.setData(self.plottime[-len:], self.roll[-len:])
-        self.yawCurve.setData(self.plottime[-len:], self.yaw[-len:])
+#        self.rollCurve.setData(self.plottime[-length:], self.pitch[-length:])
+#        self.pitchCurve.setData(self.plottime[-length:], self.roll[-length:])
+#        self.yawCurve.setData(self.plottime[-length:], self.yaw[-length:])
 
 
-        self.sampleTimeLabel.setText(str(self.dt))
+#        self.sampleTimeLabel.setText(str(self.dt))
         if(self.autoPanButton.isChecked()):
             if self.xrange == None:
                 [[xmin, xmax], [ymin, ymax]] = self.measurementPlot.viewRange()
@@ -112,6 +108,17 @@ class TeensyGUI(QtGui.QMainWindow, design.Ui_MainWindow):
 
 
 class TeensySerial(QThread):
+    class Commands(Enum):
+        USB_INVALID = 0
+        USB_LOG_START = 1
+        USB_LOG_STOP = 2
+        USB_LOG_SENSOR = 3
+        USB_WRITE_GYRO_PID = 4
+        USB_READ_GYRO_PID = 5
+        USB_WRITE_ANGLE_PID = 6
+        USB_ANGLE_ANGLE_PID = 7
+
+
     def __init__(self, baudrate):
         QThread.__init__(self)
         self.teensy_port = self.getTeensyPort()
@@ -136,23 +143,39 @@ class TeensySerial(QThread):
 
 
     def run(self):
+        packet_valid = False
+        max_size = 255
+        data_buf = b''
+        data_buf_idx = 0
         while(True):
             while(self.teensy.in_waiting == 0):
                 self.yieldCurrentThread()
-            while(self.teensy.read() != b'\x01'):
-                print("invalid data package 1")
-                pass
-            data = self.teensy.read(sensorStruct.sizeof())
-            if(self.teensy.read() == b'\x02'): # This has probably been a valid package
-                self.emit(self.signal, sensorStruct.parse(data))
-            #else:
-                #print("invalid data package 2")
+            data = self.teensy.read()
+            if(data == b'\x00'):
+                if(packet_valid):
+                    self.parseData(data_buf, data_buf_idx)
+                    data_buf = b''
+                    data_buf_idx = 0
+                else:
+                    packet_valid = True;
+                    data_buf = b''
+                    data_buf_idx = 0
+            elif(packet_valid):
+                data_buf += data
+                data_buf_idx += 1
+                if(data_buf_idx >= max_size):
+                    packet_valid = False
+                    print("Invalid packet")
 
 
-
-
-
-
+    def parseData(self, data, length):
+        data = cobs.decode(data)
+        command = int(data[0])
+        if(command == self.Commands.USB_LOG_SENSOR.value):
+            #print(' '.join(hex(x) for x in data))
+            #a = sensorStruct.parse(data)
+            #print(a)
+            self.emit(self.signal, sensorStruct.parse(data))
 
 
 def main():

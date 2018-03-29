@@ -60,7 +60,7 @@ static void stateStartup()
 static void stateStartupUpdate()
 {
     /* Transition */
-    if(receiverOk() && SensorOk()) {
+    if(SensorOk()) {
         transition(&stateReadyWait);
     }
 }
@@ -75,7 +75,7 @@ static void stateReadyWait()
 static void stateReadyWaitUpdate()
 {
     /* USB? */
-    if(usbConnected()) {
+    if(usbConnected() || 1) {
       transition(&stateUsbConnected);
     }
     /* Arm? */
@@ -135,20 +135,23 @@ enum state getCurrState()
 
 void stateUpdate()
 {
-   pfState();
+    pfState();
 }
 
 void stateDo()
 {
-        if(m_sensorActive) {
-            SensorUpdate();
-        }
-        if(m_controlActive) {
-            doControl();
-        }
-        if(m_usbActive) {
+    static unsigned int iteration = 0;
+    if(m_sensorActive) {
+        SensorUpdate();
+    }
+    if(m_controlActive) {
+        doControl();
+    }
+    if(m_usbActive) {
+        if(iteration % 10 == 0) {
             usbUpdate();
         }
+    }
 }
 
 void stateInit()

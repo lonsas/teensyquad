@@ -27,6 +27,7 @@ void usbSetup()
 {
     pinMode(USB_VOLT_PIN, INPUT);
     m_correctData = false;
+    m_sendLog = true;
 }
 bool usbConnected()
 {
