@@ -15,7 +15,19 @@ static double m_dbRollAngle;
 static double m_dbPitchAngle;
 static double m_dbYawAngle;
 
+static int16_t m_gxOffset;
+static int16_t m_gyOffset;
+static int16_t m_gzOffset;
+
+static int16_t m_axOffset;
+static int16_t m_ayOffset;
+static int16_t m_azOffset;
+
 static inline void GyroScale(int16_t gyro[3]);
+
+static void SensorCalibrateZero() {
+    mpu9150_getMotion6(&m_axOffset, &m_ayOffset, &m_azOffset, &m_gxOffset, &m_gyOffset, &m_gzOffset);
+}
 
 void SensorGetOmega(double * pdbRollOmega, double * pdbPitchOmega, double * pdbYawOmega)
 {
@@ -40,6 +52,7 @@ void SensorSetup() {
     m_dbYawAngle = 0;
 
     mpu9150_initialize();
+    SensorCalibrateZero();
     MadgwickAHRSInit();
 }
 
@@ -73,7 +86,7 @@ bool SensorOmegaIsZero()
 
 static inline void GyroScale(int16_t gyro[3])
 {
-    m_dbRollOmega = gyro[0] * GYRO_SCALE;
-    m_dbPitchOmega = gyro[1] * GYRO_SCALE;
-    m_dbYawOmega = gyro[2] * GYRO_SCALE;
+    m_dbRollOmega = (gyro[0] - m_gxOffset) * GYRO_SCALE;
+    m_dbPitchOmega = (gyro[1] - m_gyOffset) * GYRO_SCALE;
+    m_dbYawOmega = (gyro[2] - m_gzOffset) * GYRO_SCALE;
 }
