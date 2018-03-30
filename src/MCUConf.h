@@ -2,6 +2,7 @@
 #define ECU_CONF_H
 
 #define SAMPLE_TIME 1000
+#define SAMPLE_TIME_S (SAMPLE_TIME/1000000.0)
 
 #define STARTUP_TIME 10000
 

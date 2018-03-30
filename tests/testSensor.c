@@ -2,6 +2,7 @@
 #include <Sensor.h>
 #include <math.h>
 #include <stdio.h>
+#include "MCUConf.h"
 
 /* Sensor raw value dummies */
 extern int16_t g_ax;
@@ -66,8 +67,8 @@ START_TEST(testSensorUpdateAccelerationChange)
     double gPitch;
     double gYaw;
     SensorSetup();
-    g_ax = 0;
-    g_ay = 10;
+    g_ax = 10;
+    g_ay = 0;
     g_az = 10;
     g_gx = 0;
     g_gy = 0;
@@ -97,13 +98,13 @@ START_TEST(testSensorUpdateGyro)
     double gPitch;
     double gYaw;
     SensorSetup();
-    g_ax = 0;
-    g_ay = 10;
+    g_ax = 10;
+    g_ay = 0;
     g_az = 10;
     g_gx = 1*(1.0/(250.0/(1<<15)));
     g_gy = 0;
     g_gz = 0;
-    for(int i = 0; i < 100; i++) {
+    for(int i = 0; i < 1/SAMPLE_TIME_S; i++) {
         SensorUpdate();
     }
 

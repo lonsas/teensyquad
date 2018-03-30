@@ -23,9 +23,24 @@ static int16_t m_axOffset;
 static int16_t m_ayOffset;
 static int16_t m_azOffset;
 
-static inline void GyroScale(int16_t gyro[3]);
+static void GyroScale(int16_t gyro[3]);
 
-static void SensorCalibrateZero() {
+static void SensorAngleUpdate(double gx, double gy, double gz, double ax, double ay, double az)
+{
+    const double alpha = 0.98;
+
+    /* Update with gyro */
+    m_dbRollAngle += gx * SAMPLE_TIME_S;
+    m_dbPitchAngle += gy * SAMPLE_TIME_S;
+    m_dbYawAngle += gz * SAMPLE_TIME_S;
+
+    /* Update with new angles */
+    m_dbRollAngle = m_dbRollAngle * alpha + (1 - alpha) * atan2(ax, az);
+    m_dbPitchAngle = m_dbPitchAngle * alpha + (1 - alpha) * atan2(ay, az);
+}
+
+static void SensorCalibrateZero()
+{
     mpu9150_getMotion6(&m_axOffset, &m_ayOffset, &m_azOffset, &m_gxOffset, &m_gyOffset, &m_gzOffset);
 }
 
@@ -61,8 +76,11 @@ void SensorUpdate() {
     int16_t gyro[3];
     mpu9150_getMotion6(&acc[0], &acc[1], &acc[2], &gyro[0], &gyro[1], &gyro[2]);
     GyroScale(gyro);
+#if 0
     MadgwickAHRSupdateIMU(m_dbRollOmega, m_dbPitchOmega, m_dbYawOmega, acc[0], acc[1], acc[2]);
     MadgwickAHRSGetAngles(&m_dbRollAngle, &m_dbPitchAngle, &m_dbYawAngle);
+#endif
+    SensorAngleUpdate(m_dbRollOmega, m_dbPitchOmega, m_dbYawOmega, acc[0], acc[1], acc[2]);
 }
 
 bool SensorOk()
