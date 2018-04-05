@@ -17,6 +17,16 @@ static PidParameters dummyPidParameters = {
   .limit = 1e9,
 };
 
+static int findZero(uint8_t * buffer, int length)
+{
+    for(int i = 0; i < length; i++) {
+        if(buffer[i] == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 static size_t dummyUsbReceive(uint8_t * buffer)
 {
     size_t size;
@@ -72,6 +82,7 @@ START_TEST(testLog)
     uint8_t usbBuffer[USB_DATA_MAX_SIZE];
     size_t responseLength;
     size_t usbBufferLength;
+    int len;
 
     /* Set command to start logging */
     usbInputEndIdx += StuffData((uint8_t *)&command, sizeof(command), &usbInputBuffer[usbInputEndIdx]);
@@ -80,10 +91,11 @@ START_TEST(testLog)
     for(int i = 0; i < 10; i++) {
         usbUpdate();
         usbBufferLength = dummyUsbReceive(usbBuffer);
-        responseLength = UnStuffData(usbBuffer, usbBufferLength - 1, (uint8_t *)&response);
+        len = findZero(usbBuffer, usbBufferLength);
+        responseLength = UnStuffData(usbBuffer, len, (uint8_t *)&response);
 
         ck_assert_int_eq(response.command, USB_LOG_SENSOR);
-        ck_assert_int_eq(responseLength, sizeof(response));
+        ck_assert_int_eq(responseLength, sizeof(struct UsbLogPacket));
     }
 
     /* Turn of data logging */

@@ -125,7 +125,7 @@ L_INC += $(foreach lib,$(filter %/, $(wildcard $(LIBRARYPATH)/*/)), -I$(lib))
 SOURCES := $(C_FILES:.c=.o) $(CPP_FILES:.cpp=.o) $(INO_FILES:.ino=.o) $(TC_FILES:.c=.o) $(TCPP_FILES:.cpp=.o) $(LC_FILES:.c=.o) $(LCPP_FILES:.cpp=.o)
 OBJS := $(foreach src,$(SOURCES), $(BUILDDIR)/$(src))
 
-TESTABLESOURCES = src/PID.o src/GyroControl.o src/Sensor.o libraries/MadgwickAHRS/MadgwickAHRS.o src/PIDConf.o src/mix.o src/QuadState.o src/Control.o src/AngleControl.o src/Receiver.o src/EscControl.o src/UsbCommunication.o src/COBS.o host_src/dummyHostFunctions.o
+TESTABLESOURCES = src/PID.o src/GyroControl.o src/Sensor.o libraries/MadgwickAHRS/MadgwickAHRS.o src/PIDConf.o src/mix.o src/QuadState.o src/Control.o src/AngleControl.o src/Receiver.o src/EscControl.o src/UsbCommunication.o src/COBS.o host_src/dummyHostFunctions.o src/MainLoop.o
 TESTABLEOBJS := $(foreach src,$(TESTABLESOURCES), $(TESTBUILDDIR)/$(src))
 
 TESTSOURCES = $(TESTC_FILES:.c=.o)

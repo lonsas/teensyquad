@@ -8,14 +8,17 @@
 #include "PIDConf.h"
 #include "Sensor.h"
 #include "COBS.h"
-#include <alloca.h>
+#include "MainLoop.h"
+#include "Receiver.h"
 
 static bool m_correctData;
 static bool m_sendLog;
 
 
 static void sendPacket(void * data, size_t length);
-static void sendLog();
+static void sendSensorLog();
+static void sendStatsLog();
+static void sendReceiverLog();
 static bool receiveData(void * commandBuf, size_t * commandLength);
 static void commandDo(void * commandBuf, size_t length);
 static void receiveGyroPidParameters(struct UsbPidPacket * packet);
@@ -27,7 +30,7 @@ void usbSetup()
 {
     pinMode(USB_VOLT_PIN, INPUT);
     m_correctData = false;
-    m_sendLog = true;
+    m_sendLog = false;
 }
 bool usbConnected()
 {
@@ -43,7 +46,11 @@ void usbUpdate()
             commandDo(commandBuf, length);
         }
     }
-    sendLog();
+    if(m_sendLog) {
+        sendSensorLog();
+        sendStatsLog();
+        sendReceiverLog();
+    }
 }
 
 static void commandDo(void * commandBuf, size_t length)
@@ -91,17 +98,34 @@ static void sendPacket(void * data, size_t length)
     usb_serial_write(usbPacket, size);
 }
 
-static void sendLog()
+static void sendSensorLog()
 {
     struct UsbLogPacket packet;
     size_t size = sizeof(packet);
     double * sensorData = packet.sensorData;
     packet.command = USB_LOG_SENSOR;
-    if(m_sendLog) {
-        SensorGetOmega(&sensorData[0], &sensorData[1], &sensorData[2]);
-        SensorGetAngle(&sensorData[3], &sensorData[4], &sensorData[5]);
-        sendPacket(&packet, size);
-    }
+    SensorGetOmega(&sensorData[0], &sensorData[1], &sensorData[2]);
+    SensorGetAngle(&sensorData[3], &sensorData[4], &sensorData[5]);
+    sendPacket(&packet, size);
+}
+
+static void sendStatsLog()
+{
+    struct UsbStatsPacket packet;
+    size_t size = sizeof(packet);
+    packet.command = USB_LOG_STATS;
+    packet.dt = getDt();
+    sendPacket(&packet, size);
+}
+
+static void sendReceiverLog()
+{
+    struct UsbReceiverPacket packet;
+    size_t size = sizeof(packet);
+    packet.command = USB_LOG_RECEIVER;
+    receiverGetControls(&packet.throttle, &packet.roll, &packet.pitch, &packet.yaw);
+    receiverGetAux(&packet.aux1, &packet.aux2);
+    sendPacket(&packet, size);
 }
 
 static bool receiveData(void * commandBuf, size_t * commandLength)

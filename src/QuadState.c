@@ -8,6 +8,7 @@
 #include "PIDConf.h"
 #include "UsbCommunication.h"
 
+#define TRANSITION(state) do { transition(state); return; } while(0)
 
 /* Module local variables */
 static void  (*pfState)();
@@ -53,15 +54,20 @@ static void stateStartup()
 
     m_sensorActive = true;
     m_controlActive = false;
+    m_usbActive = false;
 
     entryDone(&stateStartupUpdate);
 }
 
 static void stateStartupUpdate()
 {
+    /* USB? */
+    if(usbConnected()) {
+        TRANSITION(&stateUsbConnected);
+    }
     /* Transition */
-    if(SensorOk()) {
-        transition(&stateReadyWait);
+    if(SensorOk() && receiverOk()) {
+        TRANSITION(&stateReadyWait);
     }
 }
 
@@ -74,17 +80,14 @@ static void stateReadyWait()
 
 static void stateReadyWaitUpdate()
 {
-    /* USB? */
-    if(usbConnected() || 1) {
-      transition(&stateUsbConnected);
-    }
+
     /* Arm? */
     if(!prevArmSignal && receiverSignalHigh(AUX1)) {
         if(receiverSignalLow(THROTTLE) &&
            SensorAngleIsLevel() &&
            SensorOmegaIsZero()) {
             /* TODO: check all other controls that they are in the middle also */
-            transition(&stateArmed);
+            TRANSITION(&stateArmed);
         }
     }
     /* Update */
@@ -107,7 +110,7 @@ static void stateArmedUpdate()
     if(receiverSignalLow(AUX1) && receiverSignalLow(THROTTLE)) {
         EscControlDisarm();
         m_controlActive = false;
-        transition(&stateReadyWait);
+        TRANSITION(&stateReadyWait);
     }
 }
 
@@ -123,7 +126,7 @@ static void stateUsbConnectedUpdate()
     if(!usbConnected())
     {
         m_usbActive = false;
-        transition(&stateReadyWait);
+        TRANSITION(&stateStartup);
     }
 }
 
@@ -148,15 +151,16 @@ void stateDo()
         doControl();
     }
     if(m_usbActive) {
-        if(iteration % 10 == 0) {
+        if(iteration % 1000 == 0) {
             usbUpdate();
         }
     }
+    iteration++;
 }
 
 void stateInit()
 {
     m_sensorActive = false;
     m_controlActive = false;
-    transition(&stateStartup);
+    TRANSITION(&stateStartup);
 }

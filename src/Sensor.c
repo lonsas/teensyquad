@@ -4,9 +4,6 @@
 #include "MCUConf.h"
 #include "math.h"
 
-#define OMEGA_MAX 250;
-#define ANGLE_MAX 3.15;
-
 static double m_dbRollOmega;
 static double m_dbPitchOmega;
 static double m_dbYawOmega;
@@ -27,21 +24,34 @@ static void GyroScale(int16_t gyro[3]);
 
 static void SensorAngleUpdate(double gx, double gy, double gz, double ax, double ay, double az)
 {
-    const double alpha = 0.98;
+    const double alpha = 0.5;
+    double newRollAngle;
+    double newPitchAngle;
+    double newYawAngle;
 
     /* Update with gyro */
     m_dbRollAngle += gx * SAMPLE_TIME_S;
     m_dbPitchAngle += gy * SAMPLE_TIME_S;
     m_dbYawAngle += gz * SAMPLE_TIME_S;
 
-    /* Update with new angles */
-    m_dbRollAngle = m_dbRollAngle * alpha + (1 - alpha) * atan2(ax, az);
-    m_dbPitchAngle = m_dbPitchAngle * alpha + (1 - alpha) * atan2(ay, az);
+    if(abs(ax) > ACCEL_TOL || abs(az) > ACCEL_TOL) {
+        newRollAngle = atan2(ax, az);
+        m_dbRollAngle = m_dbRollAngle * alpha + (1 - alpha) * newRollAngle;
+    }
+    if(abs(ay) > ACCEL_TOL || abs(az) > ACCEL_TOL) {
+        newPitchAngle = atan2(ay, az);
+        m_dbPitchAngle = m_dbPitchAngle * alpha + (1 - alpha) * newPitchAngle;
+    }
+    if(abs(ax) > ACCEL_TOL || abs(ay) > ACCEL_TOL) {
+        newYawAngle = atan2(ax, ay);
+        m_dbYawAngle = m_dbYawAngle * alpha + (1 - alpha) * newYawAngle;
+    }
 }
 
 static void SensorCalibrateZero()
 {
-    mpu9150_getMotion6(&m_axOffset, &m_ayOffset, &m_azOffset, &m_gxOffset, &m_gyOffset, &m_gzOffset);
+    for(int i = 0; i < 1000; i++)
+        mpu9150_getMotion6(&m_axOffset, &m_ayOffset, &m_azOffset, &m_gxOffset, &m_gyOffset, &m_gzOffset);
 }
 
 void SensorGetOmega(double * pdbRollOmega, double * pdbPitchOmega, double * pdbYawOmega)
@@ -79,8 +89,9 @@ void SensorUpdate() {
 #if 0
     MadgwickAHRSupdateIMU(m_dbRollOmega, m_dbPitchOmega, m_dbYawOmega, acc[0], acc[1], acc[2]);
     MadgwickAHRSGetAngles(&m_dbRollAngle, &m_dbPitchAngle, &m_dbYawAngle);
-#endif
+#else
     SensorAngleUpdate(m_dbRollOmega, m_dbPitchOmega, m_dbYawOmega, acc[0], acc[1], acc[2]);
+#endif
 }
 
 bool SensorOk()
@@ -91,8 +102,7 @@ bool SensorOk()
 bool SensorAngleIsLevel()
 {
     return ((fabs(m_dbRollAngle) <  ANGLE_TOL)  &&
-            (fabs(m_dbPitchAngle) <  ANGLE_TOL)  &&
-            (fabs(m_dbYawAngle) <  ANGLE_TOL));
+            (fabs(m_dbPitchAngle) <  ANGLE_TOL));
 }
 
 bool SensorOmegaIsZero()
@@ -102,9 +112,10 @@ bool SensorOmegaIsZero()
             (fabs(m_dbYawOmega) < OMEGA_TOL));
 }
 
-static inline void GyroScale(int16_t gyro[3])
+static void GyroScale(int16_t gyro[3])
 {
-    m_dbRollOmega = (gyro[0] - m_gxOffset) * GYRO_SCALE;
+    const double alpha = 0.1;
+    m_dbRollOmega = m_dbRollOmega * alpha + (1 - alpha) * (gyro[0] - m_gxOffset) * GYRO_SCALE;
     m_dbPitchOmega = (gyro[1] - m_gyOffset) * GYRO_SCALE;
     m_dbYawOmega = (gyro[2] - m_gzOffset) * GYRO_SCALE;
 }

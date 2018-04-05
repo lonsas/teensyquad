@@ -19,6 +19,15 @@ sensorStruct = AlignedStruct(8, "command" / Int8ul,
                       "accx" / Float64l,
                       "accy" / Float64l,
                       "accz" / Float64l)
+statsStruct = AlignedStruct(4, "command" / Int8ul,
+                      "dt" / Int32ul)
+receiverStruct = AlignedStruct(8, "command" / Int8ul,
+                      "roll" / Float64l,
+                      "pitch" / Float64l,
+                      "throttle" / Float64l,
+                      "yaw" / Float64l,
+                      "auxa" / Float64l,
+                      "auxb" / Float64l);
 
 pyqtgraph.setConfigOption('background', 'w')
 pyqtgraph.setConfigOption('foreground', 'k')
@@ -85,7 +94,7 @@ class TeensyGUI(QtGui.QMainWindow, design.Ui_MainWindow):
         self.plottime = [i for i in range(len(self.accx[-length:]))]
         self.accxCurve.setData(self.plottime, self.accx[-length:])
         self.accyCurve.setData(self.plottime, self.accy[-length:])
-        #self.acczCurve.setData(self.plottime, self.accz[-length:])
+        self.acczCurve.setData(self.plottime, self.accz[-length:])
         self.gyroxCurve.setData(self.plottime, self.gyrox[-length:])
         self.gyroyCurve.setData(self.plottime, self.gyroy[-length:])
         self.gyrozCurve.setData(self.plottime, self.gyroz[-length:])
@@ -117,6 +126,8 @@ class TeensySerial(QThread):
         USB_READ_GYRO_PID = 5
         USB_WRITE_ANGLE_PID = 6
         USB_ANGLE_ANGLE_PID = 7
+        USB_LOG_STATS = 8
+        USB_LOG_RECEIVER = 9
 
 
     def __init__(self, baudrate):
@@ -152,7 +163,7 @@ class TeensySerial(QThread):
                 self.yieldCurrentThread()
             data = self.teensy.read()
             if(data == b'\x00'):
-                if(packet_valid):
+                if(packet_valid and data_buf_idx > 0):
                     self.parseData(data_buf, data_buf_idx)
                     data_buf = b''
                     data_buf_idx = 0
@@ -176,6 +187,10 @@ class TeensySerial(QThread):
             #a = sensorStruct.parse(data)
             #print(a)
             self.emit(self.signal, sensorStruct.parse(data))
+        elif(command == self.Commands.USB_LOG_STATS.value):
+            print(statsStruct.parse(data).dt)
+        elif(command == self.Commands.USB_LOG_RECEIVER.value):
+            print(receiverStruct.parse(data).auxb)
 
 
 def main():

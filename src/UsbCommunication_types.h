@@ -15,6 +15,8 @@
 #define USB_READ_GYRO_PID 5
 #define USB_WRITE_ANGLE_PID 6
 #define USB_READ_ANGLE_PID 7
+#define USB_LOG_STATS 8
+#define USB_LOG_RECEIVER 9
 
 typedef uint8_t Command;
 
@@ -26,6 +28,21 @@ struct UsbLogPacket {
 struct UsbPidPacket {
     Command command;
     PidParameters pidParameters[3];
+};
+
+struct UsbStatsPacket {
+    Command command;
+    uint32_t dt;
+};
+
+struct UsbReceiverPacket {
+    Command command;
+    double roll;
+    double pitch;
+    double throttle;
+    double yaw;
+    double aux1;
+    double aux2;
 };
 
 #endif /* USB_COMMUNICATION_TYPES_H */

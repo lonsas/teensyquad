@@ -101,7 +101,7 @@ START_TEST(testSensorUpdateGyro)
     g_ax = 10;
     g_ay = 0;
     g_az = 10;
-    g_gx = 1*(1.0/(250.0/(1<<15)));
+    g_gx = 1.0/GYRO_SCALE;
     g_gy = 0;
     g_gz = 0;
     for(int i = 0; i < 1/SAMPLE_TIME_S; i++) {
@@ -111,9 +111,9 @@ START_TEST(testSensorUpdateGyro)
     SensorGetOmega(&gRoll, &gPitch, &gYaw);
     SensorGetAngle(&aRoll, &aPitch, &aYaw);
 
-    ck_assert_double_eq_tol(gRoll, 1, 1e-3);
-    ck_assert_double_eq_tol(gPitch, 0, 1e-3);
-    ck_assert_double_eq_tol(gYaw, 0, 1e-3);
+    ck_assert_double_eq_tol(gRoll, 1, 1e-2);
+    ck_assert_double_eq_tol(gPitch, 0, 1e-2);
+    ck_assert_double_eq_tol(gYaw, 0, 1e-2);
     ck_assert_double_gt(aRoll, 3.14/4);
     ck_assert_double_eq_tol(aPitch, 0, 1e-3);
     ck_assert_double_eq_tol(aYaw, 0, 1e-3);

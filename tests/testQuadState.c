@@ -136,11 +136,15 @@ END_TEST
 
 START_TEST(testUsb)
 {
-    gotoReadyWait();
     pinArray[USB_VOLT_PIN] = 5;
+    stateInit();
+    initPwmWidth();
     stateUpdate();
     ck_assert_int_eq(getCurrState(), USB_CONNECTED);
     pinArray[USB_VOLT_PIN] = 0;
+    stateUpdate();
+    initPwmWidth();
+    ck_assert_int_eq(getCurrState(), STARTUP);
     stateUpdate();
     ck_assert_int_eq(getCurrState(), READY_WAIT);
 }

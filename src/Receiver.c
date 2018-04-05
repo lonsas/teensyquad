@@ -4,10 +4,12 @@
 
 /* Constants */
 #define RADIO_PINS 6
+#define SIGNAL_MAX 2100
+#define SIGNAL_MIN 900
 
-const static uint8_t RADIOPIN[RADIO_PINS] = {3,4,5,6,7,8};
+const static uint8_t RADIOPIN[RADIO_PINS] = {2,3,4,5,6,7};
 /* Make sure the RISE pin is on a failsafe signal i.e throttle */
-const static uint8_t RADIOPIN_RISE = 2;
+const static uint8_t RADIOPIN_RISE = 1;
 
 /* Interrupt managed variables */
 static volatile int32_t radio_rise;
@@ -73,8 +75,8 @@ void receiverGetControls(double * throttle, double * roll, double * pitch, doubl
 
 void receiverGetAux(double * aux1, double * aux2)
 {
-    *aux1 = (width[AUX1] - 1500) / 500.0;
-    *aux2 = (width[AUX2] - 1500) / 500.0;
+    *aux1 = (width[AUX1] - 1000) / 1000.0;
+    *aux2 = (width[AUX2] - 1000) / 1000.0;
 }
 
 bool receiverOk()
@@ -83,7 +85,7 @@ bool receiverOk()
     bool newSignals = (micros() - radio_rise) < 2500;
     for(int i = 0; i < RADIO_PINS; i++)
     {
-        if((width[i] < 1000) || (width[i] > 2000)) {
+        if((width[i] < SIGNAL_MIN) || (width[i] > SIGNAL_MAX)) {
             signalRangeOk = false;
             break;
         }

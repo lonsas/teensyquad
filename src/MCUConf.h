@@ -9,7 +9,7 @@
 #define ANGLE_TOL 0.1
 #define OMEGA_TOL 0.1
 
-#define USB_VOLT_PIN 19
+#define USB_VOLT_PIN 17
 
 
 /* EEPROM addresses */
