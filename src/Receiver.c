@@ -7,12 +7,14 @@
 #define SIGNAL_MAX 2100
 #define SIGNAL_MIN 900
 
+#define TIMEOUT 1000000
+
 const static uint8_t RADIOPIN[RADIO_PINS] = {2,3,4,5,6,7};
 /* Make sure the RISE pin is on a failsafe signal i.e throttle */
 const static uint8_t RADIOPIN_RISE = 1;
 
 /* Interrupt managed variables */
-static volatile int32_t radio_rise;
+static volatile int32_t radio_rise = -(TIMEOUT);
 static volatile int32_t width[RADIO_PINS];
 
 /* Interrupts */
@@ -82,7 +84,8 @@ void receiverGetAux(double * aux1, double * aux2)
 bool receiverOk()
 {
     bool signalRangeOk = true;
-    bool newSignals = (micros() - radio_rise) < 2500;
+    /* TODO: Fix micros() overflow */
+    bool newSignals = ((micros() - radio_rise) < TIMEOUT);
     for(int i = 0; i < RADIO_PINS; i++)
     {
         if((width[i] < SIGNAL_MIN) || (width[i] > SIGNAL_MAX)) {

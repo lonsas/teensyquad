@@ -50,8 +50,25 @@ static void SensorAngleUpdate(double gx, double gy, double gz, double ax, double
 
 static void SensorCalibrateZero()
 {
-    for(int i = 0; i < 1000; i++)
+    int gx;
+    int gy;
+    int gz;
+    const int iterations = 1000;
+    for(int i = 0; i < iterations; i++) {
         mpu9150_getMotion6(&m_axOffset, &m_ayOffset, &m_azOffset, &m_gxOffset, &m_gyOffset, &m_gzOffset);
+#if 0
+        mpu9150_getMotion6(&m_axOffset, &m_ayOffset, &m_azOffset, &gx, &gy, &gz);
+        m_gxOffset += gx;
+        m_gyOffset += gy;
+        m_gzOffset += gz;
+#endif
+    }
+#if 0
+    m_gxOffset /= iterations;
+    m_gyOffset /= iterations;
+    m_gzOffset /= iterations;
+#endif
+
 }
 
 void SensorGetOmega(double * pdbRollOmega, double * pdbPitchOmega, double * pdbYawOmega)
