@@ -74,7 +74,7 @@ static void stateStartupUpdate()
 static void stateReadyWait()
 {
     tCurrState = READY_WAIT;
-    prevArmSignal = receiverSignalHigh(AUX1);
+    prevArmSignal = receiverSignalHigh(AUX2);
     entryDone(&stateReadyWaitUpdate);
 }
 
@@ -82,7 +82,7 @@ static void stateReadyWaitUpdate()
 {
 
     /* Arm? */
-    if(!prevArmSignal && receiverSignalHigh(AUX1)) {
+    if(!prevArmSignal && receiverSignalHigh(AUX2)) {
         if(receiverSignalLow(THROTTLE) &&
            SensorAngleIsLevel() &&
            SensorOmegaIsZero()) {
@@ -91,7 +91,7 @@ static void stateReadyWaitUpdate()
         }
     }
     /* Update */
-    prevArmSignal = receiverSignalHigh(AUX1);
+    prevArmSignal = receiverSignalHigh(AUX2);
 }
 
 static void stateArmed()
@@ -107,7 +107,7 @@ static void stateArmed()
 static void stateArmedUpdate()
 {
     /* Disarm? */
-    if(receiverSignalLow(AUX1) && receiverSignalLow(THROTTLE)) {
+    if(receiverSignalLow(AUX2) && receiverSignalLow(THROTTLE)) {
         EscControlDisarm();
         m_controlActive = false;
         TRANSITION(&stateReadyWait);
@@ -129,7 +129,6 @@ static void stateUsbConnectedUpdate()
         TRANSITION(&stateStartup);
     }
 }
-
 
 enum state getCurrState()
 {

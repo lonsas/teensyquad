@@ -7,7 +7,7 @@
 
 #define ACCEL_MAX 4.0
 #define ACCEL_SCALE (ACCEL_MAX/(1<<15))
-#define ACCEL_TOL (0.01*ACCEL_SCALE)
+#define ACCEL_TOL (0.1/ACCEL_SCALE)
 
 #define GYRO_MAX 500.0
 #define GYRO_SCALE (GYRO_MAX/(1<<15))

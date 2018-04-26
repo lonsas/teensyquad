@@ -67,9 +67,9 @@ START_TEST(testSensorUpdateAccelerationChange)
     double gPitch;
     double gYaw;
     SensorSetup();
-    g_ax = 10;
+    g_ax = 1/ACCEL_SCALE;
     g_ay = 0;
-    g_az = 10;
+    g_az = 1/ACCEL_SCALE;
     g_gx = 0;
     g_gy = 0;
     g_gz = 0;

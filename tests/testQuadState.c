@@ -68,13 +68,13 @@ END_TEST
 START_TEST(testStateArmDisarm)
 {
     gotoReadyWait();
-    receiverSetManualPW(AUX1, 2000);
+    receiverSetManualPW(AUX2, 2000);
     for(int i = 0; i < 10; i++) {
         stateUpdate();
         ck_assert_int_eq(getCurrState(), ARMED);
     }
     /* Disarm */
-    receiverSetManualPW(AUX1, 1000);
+    receiverSetManualPW(AUX2, 1000);
     stateUpdate();
     ck_assert_int_eq(getCurrState(), READY_WAIT);
 }
@@ -108,17 +108,17 @@ END_TEST
 START_TEST(testStateArmConditionReset)
 {
     gotoReadyWait();
-    receiverSetManualPW(AUX1, 2000);
+    receiverSetManualPW(AUX2, 2000);
 
     receiverSetManualPW(THROTTLE, 1500);
     stateUpdate();
     receiverSetManualPW(THROTTLE, 1000);
     stateUpdate();
     ck_assert_int_eq(getCurrState(), READY_WAIT);
-    receiverSetManualPW(AUX1, 1000);
+    receiverSetManualPW(AUX2, 1000);
     stateUpdate();
     ck_assert_int_eq(getCurrState(), READY_WAIT);
-    receiverSetManualPW(AUX1, 2000);
+    receiverSetManualPW(AUX2, 2000);
     stateUpdate();
     ck_assert_int_eq(getCurrState(), ARMED);
 }

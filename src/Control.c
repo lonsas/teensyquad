@@ -4,6 +4,7 @@
 #include "mix.h"
 #include "Receiver.h"
 #include "EscControl.h"
+#include <math.h>
 
 #ifndef PI
 #define PI 3.1415

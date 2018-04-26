@@ -5,19 +5,19 @@
 #include "eeprom.h"
 
 static const PidParameters gyroDefaultPidParameters = {
-  .K = 1,
-  .Ti = 10,
+  .K = 0,
+  .Ti = 0,
   .Td = 0,
-  .Tt = 10,
+  .Tt = 0,
   .b = 1,
   .h = 0.001,
 };
 
 static const PidParameters angleDefaultPidParameters = {
   .K = 1,
-  .Ti = 10,
+  .Ti = 0,
   .Td = 0,
-  .Tt = 10,
+  .Tt = 0,
   .b = 1,
   .h = 0.001,
 };

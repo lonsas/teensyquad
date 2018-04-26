@@ -53,7 +53,7 @@ TESTPATH = tests
 #************************************************************************
 
 # CPPFLAGS = compiler options for C and C++
-CPPFLAGS = -Wall -g -Os -mthumb -ffunction-sections -fdata-sections -nostdlib -MMD $(OPTIONS) -DTEENSYDUINO=124 -DF_CPU=$(TEENSY_CORE_SPEED) -Isrc -I$(COREPATH)
+CPPFLAGS = -Wall -Os -mthumb -ffunction-sections -fdata-sections -nostdlib -MMD $(OPTIONS) -DTEENSYDUINO=124 -DF_CPU=$(TEENSY_CORE_SPEED) -Isrc -I$(COREPATH)
 CPPFLAGS += -I$(COREPATH)/avr
 CPPFLAGS += -DARDUINO=101
 # compiler options for C++ only
@@ -125,13 +125,13 @@ L_INC += $(foreach lib,$(filter %/, $(wildcard $(LIBRARYPATH)/*/)), -I$(lib))
 SOURCES := $(C_FILES:.c=.o) $(CPP_FILES:.cpp=.o) $(INO_FILES:.ino=.o) $(TC_FILES:.c=.o) $(TCPP_FILES:.cpp=.o) $(LC_FILES:.c=.o) $(LCPP_FILES:.cpp=.o)
 OBJS := $(foreach src,$(SOURCES), $(BUILDDIR)/$(src))
 
-TESTABLESOURCES = src/PID.o src/GyroControl.o src/Sensor.o libraries/MadgwickAHRS/MadgwickAHRS.o src/PIDConf.o src/mix.o src/QuadState.o src/Control.o src/AngleControl.o src/Receiver.o src/EscControl.o src/UsbCommunication.o src/COBS.o host_src/dummyHostFunctions.o src/MainLoop.o
+TESTABLESOURCES = src/PID.o src/GyroControl.o src/Sensor.o src/PIDConf.o src/mix.o src/QuadState.o src/Control.o src/AngleControl.o src/Receiver.o src/EscControl.o src/UsbCommunication.o src/COBS.o host_src/dummyHostFunctions.o src/MainLoop.o
 TESTABLEOBJS := $(foreach src,$(TESTABLESOURCES), $(TESTBUILDDIR)/$(src))
 
 TESTSOURCES = $(TESTC_FILES:.c=.o)
 TESTOBJS := $(foreach src,$(TESTSOURCES), $(TESTBUILDDIR)/$(src))
 
-MODELSOURCES = src/PID.o src/GyroControl.o src/Sensor.o libraries/MadgwickAHRS/MadgwickAHRS.o src/PIDConf.o src/mix.o src/QuadState.o src/Control.o src/AngleControl.o src/Receiver.o src/EscControl.o host_src/dummyHostFunctions.o
+MODELSOURCES = src/PID.o src/GyroControl.o src/Sensor.o src/PIDConf.o src/mix.o src/QuadState.o src/Control.o src/AngleControl.o src/Receiver.o src/EscControl.o host_src/dummyHostFunctions.o
 MODELOBJS := $(foreach src,$(MODELSOURCES), $(MODELBUILDDIR)/$(src))
 
 MODELLIBRARY := $(MODELBUILDDIR)/teensyquad.so

@@ -2,7 +2,7 @@
 #include "MPU9150_c.h"
 #include "MadgwickAHRS.h"
 #include "MCUConf.h"
-#include "math.h"
+#include <math.h>
 
 static double m_dbRollOmega;
 static double m_dbPitchOmega;
@@ -34,16 +34,16 @@ static void SensorAngleUpdate(double gx, double gy, double gz, double ax, double
     m_dbPitchAngle += gy * SAMPLE_TIME_S;
     m_dbYawAngle += gz * SAMPLE_TIME_S;
 
-    if(abs(ax) > ACCEL_TOL || abs(az) > ACCEL_TOL) {
+    if(fabs(ax) > ACCEL_TOL || fabs(az) > ACCEL_TOL) {
         newRollAngle = atan2(ax, az);
         m_dbRollAngle = m_dbRollAngle * alpha + (1 - alpha) * newRollAngle;
     }
-    if(abs(ay) > ACCEL_TOL || abs(az) > ACCEL_TOL) {
+    if(fabs(ay) > ACCEL_TOL || fabs(az) > ACCEL_TOL) {
         newPitchAngle = atan2(ay, az);
         m_dbPitchAngle = m_dbPitchAngle * alpha + (1 - alpha) * newPitchAngle;
     }
-    if(abs(ax) > ACCEL_TOL || abs(ay) > ACCEL_TOL) {
-        newYawAngle = atan2(ax, ay);
+    if(fabs(ax) > ACCEL_TOL || fabs(ay) > ACCEL_TOL) {
+        newYawAngle = atan2(ay, ax);
         m_dbYawAngle = m_dbYawAngle * alpha + (1 - alpha) * newYawAngle;
     }
 }
@@ -78,7 +78,9 @@ void SensorSetup() {
 
     mpu9150_initialize();
     SensorCalibrateZero();
+#if 0
     MadgwickAHRSInit();
+#endif
 }
 
 void SensorUpdate() {
