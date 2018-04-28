@@ -17,6 +17,8 @@ const static uint8_t RADIOPIN_RISE = 1;
 static volatile int32_t radio_rise = -(TIMEOUT);
 static volatile int32_t width[RADIO_PINS];
 
+
+
 /* Interrupts */
 void radio_pw_rise_isr() {
     radio_rise = micros();
@@ -94,6 +96,23 @@ bool receiverOk()
         }
     }
     return (newSignals && signalRangeOk);
+}
+
+void receiverFailSafe()
+{
+    static int32_t prevAux1 = 1000;
+    static int32_t prevAux2 = 1000;
+    if(receiverOk()) {
+        prevAux1 = width[AUX1];
+        prevAux2 = width[AUX2];
+    } else {
+        width[THROTTLE] = 1000;
+        width[ROLL] = 1500;
+        width[PITCH] = 1500;
+        width[YAW] = 1500;
+        width[AUX1] = prevAux1;
+        width[AUX2] = prevAux2;
+    }
 }
 
 bool receiverSignalHigh(int signal)

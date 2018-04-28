@@ -21,6 +21,8 @@ void receiverSetup();
 
 bool receiverOk();
 
+void receiverFailSafe();
+
 void receiverSetAllManualPW(int * micros);
 void receiverSetManualPW(int signal, int micros);
 

@@ -113,12 +113,7 @@ static void stateArmedUpdate()
         TRANSITION(&stateReadyWait);
     }
 
-    if(!receiverOk()) {
-        EscControlDisarm();
-        m_controlActive = false;
-        TRANSITION(&stateReadyWait);
-    }
-
+    receiverFailSafe();
 }
 
 static void stateUsbConnected()
