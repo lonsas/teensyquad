@@ -6,9 +6,9 @@
 
 
 void mixDistribute(double *roll, double *pitch, double *yaw, double *mixed) {
-    /*     ^
-     * CW 0 2 CC
-     * CC 1 3 CW
+    /*     ^       ^
+     * CC 0 2 CW   | pitch
+     * CW 1 3 CC  --> roll
      */
 
     for(int i = 0; i < 4; i++) {
@@ -16,10 +16,10 @@ void mixDistribute(double *roll, double *pitch, double *yaw, double *mixed) {
     }
 
     /*pitch*/
-    mixed[0] += *pitch/4;
-    mixed[1] -= *pitch/4;
-    mixed[2] += *pitch/4;
-    mixed[3] -= *pitch/4;
+    mixed[0] -= *pitch/4;
+    mixed[1] += *pitch/4;
+    mixed[2] -= *pitch/4;
+    mixed[3] += *pitch/4;
 
     /*roll*/
     mixed[0] += *roll/4;
@@ -36,7 +36,7 @@ void mixDistribute(double *roll, double *pitch, double *yaw, double *mixed) {
 }
 
 void unmix(double *roll, double *pitch, double *yaw, double *mixed) {
-    *pitch = mixed[0] - mixed[1] + mixed[2] - mixed[3];
+    *pitch = -mixed[0] + mixed[1] - mixed[2] + mixed[3];
     *roll = mixed[0] + mixed[1] - mixed[2] - mixed[3];
     *yaw = mixed[0] - mixed[1] - mixed[2] + mixed[3];
 }

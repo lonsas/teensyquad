@@ -22,6 +22,8 @@ static int16_t m_azOffset;
 
 static void GyroScale(int16_t gyro[3]);
 
+static void getMotion6_corrected(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz);
+
 static void SensorAngleUpdate(double gx, double gy, double gz, double ax, double ay, double az)
 {
     const double alpha = 0.5;
@@ -35,12 +37,12 @@ static void SensorAngleUpdate(double gx, double gy, double gz, double ax, double
     m_dbYawAngle += gz * SAMPLE_TIME_S;
 
     if(fabs(ax) > ACCEL_TOL || fabs(az) > ACCEL_TOL) {
-        newRollAngle = atan2(ax, az);
-        m_dbRollAngle = m_dbRollAngle * alpha + (1 - alpha) * newRollAngle;
+        newPitchAngle = atan2(ax, az);
+        m_dbPitchAngle = m_dbPitchAngle * alpha + (1 - alpha) * newPitchAngle;
     }
     if(fabs(ay) > ACCEL_TOL || fabs(az) > ACCEL_TOL) {
-        newPitchAngle = atan2(ay, az);
-        m_dbPitchAngle = m_dbPitchAngle * alpha + (1 - alpha) * newPitchAngle;
+        newRollAngle = atan2(ay, az);
+        m_dbRollAngle = m_dbRollAngle * alpha + (1 - alpha) * newRollAngle;
     }
     if(fabs(ax) > ACCEL_TOL || fabs(ay) > ACCEL_TOL) {
         newYawAngle = atan2(ay, ax);
@@ -55,9 +57,8 @@ static void SensorCalibrateZero()
     int gz;
     const int iterations = 1000;
     for(int i = 0; i < iterations; i++) {
-        mpu9150_getMotion6(&m_axOffset, &m_ayOffset, &m_azOffset, &m_gxOffset, &m_gyOffset, &m_gzOffset);
+        getMotion6_corrected(&m_axOffset, &m_ayOffset, &m_azOffset, &m_gxOffset, &m_gyOffset, &m_gzOffset);
 #if 0
-        mpu9150_getMotion6(&m_axOffset, &m_ayOffset, &m_azOffset, &gx, &gy, &gz);
         m_gxOffset += gx;
         m_gyOffset += gy;
         m_gzOffset += gz;
@@ -81,8 +82,8 @@ void SensorGetOmega(double * pdbRollOmega, double * pdbPitchOmega, double * pdbY
 void SensorGetAngle(double * pdbRollAngle, double * pdbPitchAngle, double * pdbYawAngle)
 {
     *pdbRollAngle = m_dbRollAngle;
-    *pdbPitchAngle = m_dbPitchAngle;
-    *pdbYawAngle = m_dbYawAngle;
+    *pdbPitchAngle = -m_dbPitchAngle;
+    *pdbYawAngle = -m_dbYawAngle;
 }
 
 void SensorSetup() {
@@ -103,7 +104,8 @@ void SensorSetup() {
 void SensorUpdate() {
     int16_t acc[3];
     int16_t gyro[3];
-    mpu9150_getMotion6(&acc[0], &acc[1], &acc[2], &gyro[0], &gyro[1], &gyro[2]);
+    getMotion6_corrected(&acc[0], &acc[1], &acc[2], &gyro[0], &gyro[1], &gyro[2]);
+
     GyroScale(gyro);
 #if 0
     MadgwickAHRSupdateIMU(m_dbRollOmega, m_dbPitchOmega, m_dbYawOmega, acc[0], acc[1], acc[2]);
@@ -137,4 +139,15 @@ static void GyroScale(int16_t gyro[3])
     m_dbRollOmega = m_dbRollOmega * alpha + (1 - alpha) * (gyro[0] - m_gxOffset) * GYRO_SCALE;
     m_dbPitchOmega = (gyro[1] - m_gyOffset) * GYRO_SCALE;
     m_dbYawOmega = (gyro[2] - m_gzOffset) * GYRO_SCALE;
+}
+
+void getMotion6_corrected(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz)
+{
+    mpu9150_getMotion6(ax, ay, az, gx, gy, gz);
+    *ax = -*ax;
+    *ay = -*ay;
+
+    *gx = *gx;
+    *gy = *gy;
+    *gz = -*gz;
 }

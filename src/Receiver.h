@@ -3,8 +3,8 @@
 
 #include "stdbool.h"
 
-#define ROLL 0
-#define PITCH 1
+#define ROLL 1
+#define PITCH 0
 #define THROTTLE 2
 #define YAW 3
 #define AUX1 4

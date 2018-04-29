@@ -106,7 +106,7 @@ void receiverFailSafe()
         prevAux1 = width[AUX1];
         prevAux2 = width[AUX2];
     } else {
-        width[THROTTLE] = 1000;
+        width[THROTTLE] = SIGNAL_MIN;
         width[ROLL] = 1500;
         width[PITCH] = 1500;
         width[YAW] = 1500;

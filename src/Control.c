@@ -12,6 +12,7 @@
 
 #define MAX_ANGLE PI*0.25
 #define MAX_OMEGA PI*2
+#define YAW_GAIN 100
 
 void controlSetup()
 {
@@ -46,7 +47,7 @@ void doControl() {
     /* TODO: Make the scalings tunable */
     rollRef *= MAX_ANGLE;
     pitchRef *= MAX_ANGLE;
-    yawOmegaRef *= MAX_OMEGA;
+    yawOmegaRef *= YAW_GAIN;
 
     setAngleRef(rollRef, pitchRef, 0); /* No yaw angle control */
     angleCalculateControl(&rollOmegaRef, &pitchOmegaRef, &dummy);
