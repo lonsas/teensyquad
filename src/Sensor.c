@@ -26,7 +26,7 @@ static void getMotion6_corrected(int16_t* ax, int16_t* ay, int16_t* az, int16_t*
 
 static void SensorAngleUpdate(double gx, double gy, double gz, double ax, double ay, double az)
 {
-    const double alpha = 0.5;
+    const double alpha = 0.3;
     double newRollAngle;
     double newPitchAngle;
     double newYawAngle;
@@ -136,7 +136,7 @@ bool SensorOmegaIsZero()
 static void GyroScale(int16_t gyro[3])
 {
     const double alpha = 0.1;
-    m_dbRollOmega = m_dbRollOmega * alpha + (1 - alpha) * (gyro[0] - m_gxOffset) * GYRO_SCALE;
+    m_dbRollOmega = (gyro[0] - m_gxOffset) * GYRO_SCALE;
     m_dbPitchOmega = (gyro[1] - m_gyOffset) * GYRO_SCALE;
     m_dbYawOmega = (gyro[2] - m_gzOffset) * GYRO_SCALE;
 }
