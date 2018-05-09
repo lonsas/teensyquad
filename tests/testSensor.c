@@ -83,8 +83,8 @@ START_TEST(testSensorUpdateAccelerationChange)
     ck_assert_double_eq_tol(gRoll, 0, 1e-3);
     ck_assert_double_eq_tol(gPitch, 0, 1e-3);
     ck_assert_double_eq_tol(gYaw, 0, 1e-3);
-    ck_assert_double_eq_tol(aRoll, 3.14/4, 1e-3);
-    ck_assert_double_eq_tol(aPitch, 0, 1e-3);
+    ck_assert_double_eq_tol(aRoll, 0, 1e-3);
+    ck_assert_double_eq_tol(aPitch, 3.14/4, 1e-3);
     ck_assert_double_eq_tol(aYaw, 0, 1e-3);
 }
 END_TEST

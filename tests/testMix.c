@@ -12,10 +12,10 @@ START_TEST(testMixDistribute)
     double roll = 20;
     double pitch = 300;
     double yaw = 1000;
-    double expectedOutput[4] = {(pitch+roll+yaw)/4,
-                                (-pitch+roll-yaw)/4,
-                                (pitch-roll-yaw)/4,
-                                (-pitch-roll+yaw)/4};
+    double expectedOutput[4] = {(-pitch+roll+yaw)/4,
+                                (pitch+roll-yaw)/4,
+                                (-pitch-roll-yaw)/4,
+                                (pitch-roll+yaw)/4};
     mixDistribute(&roll, &pitch, &yaw, output);
     for(int i = 0; i < 4; i++) {
         ck_assert_double_eq_tol(output[i], expectedOutput[i], 1e-6);

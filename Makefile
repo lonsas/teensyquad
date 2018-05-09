@@ -131,7 +131,7 @@ TESTABLEOBJS := $(foreach src,$(TESTABLESOURCES), $(TESTBUILDDIR)/$(src))
 TESTSOURCES = $(TESTC_FILES:.c=.o)
 TESTOBJS := $(foreach src,$(TESTSOURCES), $(TESTBUILDDIR)/$(src))
 
-MODELSOURCES = src/PID.o src/GyroControl.o src/Sensor.o src/PIDConf.o src/mix.o src/QuadState.o src/Control.o src/AngleControl.o src/Receiver.o src/EscControl.o host_src/dummyHostFunctions.o
+MODELSOURCES = src/PID.o src/GyroControl.o src/Sensor.o src/PIDConf.o src/mix.o src/QuadState.o src/Control.o src/AngleControl.o src/Receiver.o src/EscControl.o src/UsbCommunication.o src/COBS.o src/MainLoop.o host_src/dummyHostFunctions.o
 MODELOBJS := $(foreach src,$(MODELSOURCES), $(MODELBUILDDIR)/$(src))
 
 MODELLIBRARY := $(MODELBUILDDIR)/teensyquad.so

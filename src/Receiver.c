@@ -14,10 +14,8 @@ const static uint8_t RADIOPIN[RADIO_PINS] = {2,3,4,5,6,7};
 const static uint8_t RADIOPIN_RISE = 1;
 
 /* Interrupt managed variables */
-static volatile int32_t radio_rise = -(TIMEOUT);
+static volatile int32_t radio_rise;
 static volatile int32_t width[RADIO_PINS];
-
-
 
 /* Interrupts */
 void radio_pw_rise_isr() {

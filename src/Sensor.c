@@ -44,10 +44,12 @@ static void SensorAngleUpdate(double gx, double gy, double gz, double ax, double
         newRollAngle = atan2(ay, az);
         m_dbRollAngle = m_dbRollAngle * alpha + (1 - alpha) * newRollAngle;
     }
+#if 0
     if(fabs(ax) > ACCEL_TOL || fabs(ay) > ACCEL_TOL) {
         newYawAngle = atan2(ay, ax);
         m_dbYawAngle = m_dbYawAngle * alpha + (1 - alpha) * newYawAngle;
     }
+#endif
 }
 
 static void SensorCalibrateZero()
