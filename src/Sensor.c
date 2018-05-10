@@ -54,22 +54,23 @@ static void SensorAngleUpdate(double gx, double gy, double gz, double ax, double
 
 static void SensorCalibrateZero()
 {
-    int gx;
-    int gy;
-    int gz;
+    int32_t gx = 0;
+    int32_t gy = 0;
+    int32_t gz = 0;
     const int iterations = 1000;
     for(int i = 0; i < iterations; i++) {
+#if 0
         getMotion6_corrected(&m_axOffset, &m_ayOffset, &m_azOffset, &m_gxOffset, &m_gyOffset, &m_gzOffset);
-#if 0
-        m_gxOffset += gx;
-        m_gyOffset += gy;
-        m_gzOffset += gz;
-#endif
     }
-#if 0
-    m_gxOffset /= iterations;
-    m_gyOffset /= iterations;
-    m_gzOffset /= iterations;
+#else
+        getMotion6_corrected(&m_axOffset, &m_ayOffset, &m_azOffset, &m_gxOffset, &m_gyOffset, &m_gzOffset);
+        gx += m_gxOffset;
+        gy += m_gyOffset;
+        gz += m_gzOffset;
+    }
+    m_gxOffset = gx/iterations;
+    m_gyOffset = gy/iterations;
+    m_gzOffset = gz/iterations;
 #endif
 
 }

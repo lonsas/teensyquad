@@ -12,7 +12,9 @@
 
 #define MAX_ANGLE PI*0.5
 #define MAX_OMEGA PI*2
-#define YAW_GAIN 300
+#define ROLL_GAIN 500
+#define PITCH_GAIN 500
+#define YAW_GAIN 500
 
 void controlSetup()
 {
@@ -41,6 +43,7 @@ void doControl() {
 
     double output[4];
 
+#if 0
     receiverGetControls(&throttle, &rollRef, &pitchRef, &yawOmegaRef);
 
     /* Convert the receiver controls to relevant units */
@@ -51,7 +54,13 @@ void doControl() {
 
     setAngleRef(rollRef, pitchRef, 0); /* No yaw angle control */
     angleCalculateControl(&rollOmegaRef, &pitchOmegaRef, &dummy);
+#else
+    receiverGetControls(&throttle, &rollOmegaRef, &pitchOmegaRef, &yawOmegaRef);
 
+    rollOmegaRef *= ROLL_GAIN;
+    pitchOmegaRef *= PITCH_GAIN;
+    yawOmegaRef *= YAW_GAIN;
+#endif
     setOmegaRef(rollOmegaRef, pitchOmegaRef, yawOmegaRef);
     gyroCalculateControl(&rollOmegaDot, &pitchOmegaDot, &yawOmegaDot);
 

@@ -6,7 +6,7 @@
 
 static const PidParameters gyroDefaultPidParameters = {
   .K = 0.04,
-  .Ti = 2,
+  .Ti = 0.25,
   .Td = 0,
   .Tt = 0,
   .b = 1.5,
