@@ -1,5 +1,20 @@
 from ctypes import *
 import os
+from enum import Enum
+
+class TeensyQuadState(Enum):
+    STARTUP = 0
+    READY_WAIT = 1
+    ARMED = 2
+    USB_CONNECTED = 3
+
+class QuadControl(Enum):
+    PITCH =  0
+    ROLL =  1
+    THROTTLE = 2
+    YAW = 3
+    AUX1 = 4
+    AUX2 = 5
 
 class TeensyQuad:
     def __init__(self):
@@ -20,7 +35,7 @@ class TeensyQuad:
 
     def setCommand(self, signal, command):
         pulse_width = command * 1000 + 1000
-        self.quad.receiverSetManualPW(signal, int(pulse_width))
+        self.quad.receiverSetManualPW(signal.value, int(pulse_width))
 
     def setMotion(self, acceleration, rotational_velocity):
         ACCELERATION_MAX = 2.0*9.82 #m/s^2
@@ -51,27 +66,27 @@ class TeensyQuad:
 
     def arm(self, arm):
         if(arm):
-            self.setCommand(4, 1)
+            self.setCommand(QuadControl.AUX2, 1)
         else:
-            self.setCommand(4, 0)
+            self.setCommand(QuadControl.AUX2, 0)
 
     def setThrottle(self, throttle):
-        self.setCommand(2, throttle)
+        self.setCommand(QuadControl.THROTTLE, throttle)
 
     def setYawStick(self, yaw):
-        self.setCommand(3, yaw + 0.5)
+        self.setCommand(QuadControl.YAW, yaw / 2.0 + 0.5)
 
     def setRollStick(self, roll):
-        self.setCommand(3, roll + 0.5)
+        self.setCommand(QuadControl.ROLL, roll / 2.0 + 0.5)
 
     def setPitchStick(self, pitch):
-        self.setCommand(3, pitch + 0.5)
+        self.setCommand(QuadControl.PITCH, pitch / 2.0 + 0.5)
 
     def setDefaultSticks(self):
         self.setCommands([0.5, 0.5, 0, 0.5, 0, 0])
 
     def getState(self):
-        return int(self.quad.getCurrState())
+        return TeensyQuadState(int(self.quad.getCurrState()))
 
     def getSensorAngle(self):
         roll = c_double()
