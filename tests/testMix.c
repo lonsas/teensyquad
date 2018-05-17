@@ -78,6 +78,37 @@ START_TEST(testMixOutputSaturated)
 }
 END_TEST
 
+START_TEST(testMix)
+{
+    double throttle = 0.5;
+    double roll = 2;
+    double pitch = 3;
+    double yaw = 5;
+    double battery = 10;
+    double croll = 2;
+    double cpitch = 3;
+    double cyaw = 5;
+
+    double output[4];
+    double coutput[4] = {(throttle * battery + croll/4 - cpitch/4 + cyaw/4) / battery,
+        (throttle * battery + croll/4 + cpitch/4 - cyaw/4) / battery,
+        (throttle * battery - croll/4 - cpitch/4 - cyaw/4) / battery,
+        (throttle * battery - croll/4 + cpitch/4 + cyaw/4) / battery};
+
+    mix(throttle, battery, &roll, &pitch, &yaw, output);
+
+    ck_assert_double_eq_tol(roll, croll, 1e-9);
+    ck_assert_double_eq_tol(pitch, cpitch, 1e-9);
+    ck_assert_double_eq_tol(yaw, cyaw, 1e-9);
+
+    ck_assert_double_eq_tol(output[0], coutput[0], 1e-9);
+    ck_assert_double_eq_tol(output[1], coutput[1], 1e-9);
+    ck_assert_double_eq_tol(output[2], coutput[2], 1e-9);
+    ck_assert_double_eq_tol(output[3], coutput[3], 1e-9);
+
+}
+END_TEST
+
 Suite * MixSuite(void)
 {
     Suite *s;
@@ -92,6 +123,7 @@ Suite * MixSuite(void)
     tcase_add_test(tc_core, testMixUnmix);
     tcase_add_test(tc_core, testMixOutput);
     tcase_add_test(tc_core, testMixOutputSaturated);
+    tcase_add_test(tc_core, testMix);
     suite_add_tcase(s, tc_core);
 
     return s;

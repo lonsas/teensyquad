@@ -59,7 +59,7 @@ void mixOutput(double throttle, double dbBatVolt, double *mixed, double *output)
     }
 }
 
-void mix(double throttle, double dbBatVolt, double *pitch, double *roll, double *yaw, double *output) {
+void mix(double throttle, double dbBatVolt, double *roll, double *pitch, double *yaw, double *output) {
     double mixed[4];
     mixDistribute(roll, pitch, yaw, mixed);
     mixOutput(throttle, dbBatVolt, mixed, output);
