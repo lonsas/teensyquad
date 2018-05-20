@@ -63,8 +63,15 @@ void doControl() {
 #endif
     setOmegaRef(rollOmegaRef, pitchOmegaRef, yawOmegaRef);
     gyroCalculateControl(&rollOmegaDot, &pitchOmegaDot, &yawOmegaDot);
-
     mix(throttle, 12, &rollOmegaDot, &pitchOmegaDot, &yawOmegaDot, output);
+
     EscControlOutput(output);
+
+    gyroUpdate(rollOmegaDot, pitchOmegaDot, yawOmegaDot);
+#if 0
+    /* TODO: Add tracking for anti windup */
+    angleUpdate(rollOmegaRef, pitchOmegaRef, yawOmegaRef);
+#endif
+
 }
 
