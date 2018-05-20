@@ -52,7 +52,7 @@ void mixOutput(double throttle, double dbBatVolt, double *mixed, double *output)
         mixed[i] += throttle;
         if(mixed[i] < 0) {
             mixed[i] = 0;
-        } else if(output[i] > dbBatVolt) {
+        } else if(mixed[i] > dbBatVolt) {
             mixed[i] = dbBatVolt;
         }
         output[i] = mixed[i]/dbBatVolt;

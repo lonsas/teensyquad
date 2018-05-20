@@ -60,7 +60,7 @@ START_TEST(testMixOutput)
 }
 END_TEST
 
-START_TEST(testMixOutputSaturated)
+START_TEST(testMixOutputThrottleSaturated)
 {
     double roll;
     double pitch;
@@ -73,6 +73,25 @@ START_TEST(testMixOutputSaturated)
     mixDistribute(&roll, &pitch, &yaw, mixed);
     for(int i = 0; i < 4; i++) {
         ck_assert_double_eq_tol(output[i], THROTTLE_MAX, 1e-9);
+        ck_assert_double_eq_tol(mixed[i], cmixed[i], 1e-9);
+    }
+}
+END_TEST
+
+START_TEST(testMixOutputSaturated)
+{
+    double roll;
+    double pitch;
+    double yaw;
+    double mixed[4] = {6,6,0,0};
+    const double cmixed[4] = {2.5,2.5,-2.5,-2.5};
+    double output[4];
+    const double coutput[4] = {1,1,0.5,0.5};
+    mixOutput(0.5, 10, mixed, output);
+    unmix(&roll, &pitch, &yaw, mixed);
+    mixDistribute(&roll, &pitch, &yaw, mixed);
+    for(int i = 0; i < 4; i++) {
+        ck_assert_double_eq_tol(output[i], coutput[i], 1e-9);
         ck_assert_double_eq_tol(mixed[i], cmixed[i], 1e-9);
     }
 }
@@ -122,6 +141,7 @@ Suite * MixSuite(void)
     tcase_add_test(tc_core, testMixDistribute);
     tcase_add_test(tc_core, testMixUnmix);
     tcase_add_test(tc_core, testMixOutput);
+    tcase_add_test(tc_core, testMixOutputThrottleSaturated);
     tcase_add_test(tc_core, testMixOutputSaturated);
     tcase_add_test(tc_core, testMix);
     suite_add_tcase(s, tc_core);
