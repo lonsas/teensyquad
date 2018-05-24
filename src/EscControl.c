@@ -8,7 +8,7 @@
 
 static bool m_boArmed;
 
-static void writeMicros(uint8_t pin, int micros) {
+static void writeMicros(uint8_t pin, double micros) {
     analogWrite(pin, micros*SCALING);
 }
 
@@ -32,7 +32,7 @@ void EscControlSetup() {
 }
 
 void EscControlOutput(double *motor) {
-    int32_t motor0_pwm, motor1_pwm, motor2_pwm, motor3_pwm;
+    double motor0_pwm, motor1_pwm, motor2_pwm, motor3_pwm;
     if(m_boArmed) {
         if(motor[0] <= MOTOR_MIN) {
             motor0_pwm = MOTOR_MICROS_MIN;

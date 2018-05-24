@@ -15,7 +15,7 @@
 
 #define PWM_RES 12
 #define PWM_RATE 400
-#define SCALING (PWM_RATE*(1<<(int32_t)PWM_RES)/1000000.0)
+#define SCALING (PWM_RATE*(1<<PWM_RES)/1000000.0)
 
 #define MOTOR_MIN 0.04
 #define MOTOR_MICROS_MAX 2000
