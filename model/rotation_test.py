@@ -4,17 +4,18 @@ import params
 import numpy as np
 from math import *
 import matplotlib.pyplot as plt
-T = 1
+T = 2
 dt = 0.001
 sim_dt = dt/1
 
-signal_disturbance = 0.1
+signal_disturbance_std = 0.0 #rad/s
+load_disturbance = np.array([0, 0.1, 0.1, 0.1]) #Nm
+load_disturbance_t = 1 #s
 
 def motor_to_phys(motors):
     """ Calculates Forces and torque from motor intensities """
     F = [params.MotorF * x for x in motors] # Scale
-    #print(params.A.dot(F))
-    #print(F)
+
     return params.A.dot(F)
 
 class QuadModel:
@@ -31,10 +32,6 @@ class QuadModel:
         self.state[0:3] = angle
         self.state[3:6] = omega
         self.state[6:9] = omegaDot
-        #print(omegaDot)
-        #print(self.state)
-        print(self.state[[0,3,6]])
-        #print(self.state[6:])
 
     def gravity(self):
         v = np.array([sin(self.state[0]),
@@ -43,27 +40,37 @@ class QuadModel:
         v = 9.82*v/np.linalg.norm(v)
 
         return v
+
     def omega(self):
-        return self.state[3:6]
+        return self.state[3:6].copy()
+
+def add_load_disturbance(FM, time):
+    if(time > load_disturbance_t):
+        return FM + load_disturbance
+    return FM
 
 def teensyquad_update_loop(teensyquad, simquad):
     omega_log = np.empty(shape=[0,3])
     FM_log = np.empty(shape=[0,4])
-    for i in range(0, int(T/dt)):
+    for time in np.arange(0, T, dt):
+
         v = simquad.gravity()
         omega = simquad.omega()
-        print(omega)
+
+        omega += np.random.normal(0, signal_disturbance_std)
+
         motor = teensyquad.update(v, omega)
-        print(motor)
         FM = motor_to_phys(motor)
-        FM_log = np.vstack((FM_log, FM))
+
+        FM = add_load_disturbance(FM, time)
+
         for _ in range(0,int(dt/sim_dt)):
             simquad.stateUpdate(FM[0], FM[1:4], sim_dt)
             omega_log = np.vstack((omega_log, simquad.omega()))
+            FM_log = np.vstack((FM_log, FM))
     return (omega_log, FM_log)
 
 def run():
-
     simquad = QuadModel()
     teensyquad = TeensyQuad()
     teensyquad.gotoArmed()
