@@ -28,17 +28,17 @@ void mixDistribute(double *roll, double *pitch, double *yaw, double *mixed) {
     mixed[3] -= *roll/4;
 
     /*yaw*/
-    mixed[0] += *yaw/4;
-    mixed[1] -= *yaw/4;
-    mixed[2] -= *yaw/4;
-    mixed[3] += *yaw/4;
+    mixed[0] -= *yaw/4;
+    mixed[1] += *yaw/4;
+    mixed[2] += *yaw/4;
+    mixed[3] -= *yaw/4;
 
 }
 
 void unmix(double *roll, double *pitch, double *yaw, double *mixed) {
     *pitch = -mixed[0] + mixed[1] - mixed[2] + mixed[3];
     *roll = mixed[0] + mixed[1] - mixed[2] - mixed[3];
-    *yaw = mixed[0] - mixed[1] - mixed[2] + mixed[3];
+    *yaw = -mixed[0] + mixed[1] + mixed[2] - mixed[3];
 }
 
 void mixOutput(double throttle, double dbBatVolt, double *mixed, double *output) {

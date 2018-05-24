@@ -12,9 +12,9 @@
 
 #define MAX_ANGLE PI*0.5
 #define MAX_OMEGA PI*2
-#define ROLL_GAIN 500
-#define PITCH_GAIN 500
-#define YAW_GAIN 500
+#define ROLL_GAIN 5
+#define PITCH_GAIN 5
+#define YAW_GAIN 5
 
 void controlSetup()
 {

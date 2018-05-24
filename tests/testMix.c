@@ -109,10 +109,10 @@ START_TEST(testMix)
     double cyaw = 5;
 
     double output[4];
-    double coutput[4] = {(throttle * battery + croll/4 - cpitch/4 + cyaw/4) / battery,
-        (throttle * battery + croll/4 + cpitch/4 - cyaw/4) / battery,
-        (throttle * battery - croll/4 - cpitch/4 - cyaw/4) / battery,
-        (throttle * battery - croll/4 + cpitch/4 + cyaw/4) / battery};
+    double coutput[4] = {(throttle * battery + croll/4 - cpitch/4 - cyaw/4) / battery,
+        (throttle * battery + croll/4 + cpitch/4 + cyaw/4) / battery,
+        (throttle * battery - croll/4 - cpitch/4 + cyaw/4) / battery,
+        (throttle * battery - croll/4 + cpitch/4 - cyaw/4) / battery};
 
     mix(throttle, battery, &roll, &pitch, &yaw, output);
 

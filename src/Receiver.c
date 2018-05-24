@@ -70,9 +70,8 @@ void receiverGetControls(double * throttle, double * roll, double * pitch, doubl
     /* TODO Disable interrupt */
     *roll = (width[ROLL] - 1500) / 500.0;
     *pitch = (width[PITCH] - 1500) / 500.0;
-    *yaw = (width[YAW] - 1500) / 500.0;
+    *yaw = -((width[YAW] - 1500) / 500.0); /* Stick to the right should give negative yaw */
     *throttle = (width[THROTTLE] - 1000) / 1000.0;
-
 }
 
 void receiverGetAux(double * aux1, double * aux2)
