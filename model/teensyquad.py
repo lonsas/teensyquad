@@ -1,6 +1,8 @@
 from ctypes import *
 import os
 from enum import Enum
+import numpy as np
+import math
 
 class TeensyQuadState(Enum):
     STARTUP = 0
@@ -39,14 +41,19 @@ class TeensyQuad:
 
     def setMotion(self, acceleration, rotational_velocity):
         ACCELERATION_MAX = 2.0*9.82 #m/s^2
-        ROTATIONAL_VELOCITY_MAX = 250.0 #rad/s
+        ROTATIONAL_VELOCITY_MAX = math.radians(500.0) #rad/s
         DATA_WIDTH = 15 #bits
+        RAW_DATA_MAX = 2**15-1
 
         a_scale = (2**DATA_WIDTH)/ACCELERATION_MAX
         r_scale = (2**DATA_WIDTH)/ROTATIONAL_VELOCITY_MAX
+        a = [a_scale * x for x in acceleration]
+        r = [r_scale * x for x in rotational_velocity]
 
-        a = [a_scale * min(x, ACCELERATION_MAX) for x in acceleration]
-        r = [r_scale * min(x, ROTATIONAL_VELOCITY_MAX) for x in rotational_velocity]
+        r = np.clip(r, -RAW_DATA_MAX, RAW_DATA_MAX)
+
+        a[2] = -a[2] # Change the sign of the z acceleration
+
 
         self.quad.setMotion6(int(a[0]), int(a[1]), int(a[2]), int(r[0]), int(r[1]), int(r[2]))
 
@@ -102,8 +109,8 @@ class TeensyQuad:
         self.quad.SensorGetOmega(byref(roll), byref(pitch), byref(yaw))
         return [roll.value, pitch.value, yaw.value]
 
-    def update(self, angle, rotation):
-       self.setMotion(angle, rotation)
+    def update(self, acceleration, rotational_velocity):
+       self.setMotion(acceleration, rotational_velocity)
        self.quad.stateUpdate()
        self.quad.stateDo()
        return self.getMotors()
