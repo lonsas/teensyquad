@@ -36,14 +36,16 @@ static void SensorAngleUpdate(double gx, double gy, double gz, double ax, double
     m_dbPitchAngle += gy * SAMPLE_TIME_S;
     m_dbYawAngle += gz * SAMPLE_TIME_S;
 
-    if(fabs(ax) > ACCEL_TOL || fabs(az) > ACCEL_TOL) {
-        newPitchAngle = atan2(ax, az);
-        m_dbPitchAngle = m_dbPitchAngle * alpha + (1 - alpha) * newPitchAngle;
-    }
     if(fabs(ay) > ACCEL_TOL || fabs(az) > ACCEL_TOL) {
-        newRollAngle = atan2(ay, az);
+        newRollAngle = atan2(-ay, -az);
         m_dbRollAngle = m_dbRollAngle * alpha + (1 - alpha) * newRollAngle;
     }
+
+    if(fabs(ax) > ACCEL_TOL || fabs(az) > ACCEL_TOL) {
+        newPitchAngle = atan2(ax, -az);
+        m_dbPitchAngle = m_dbPitchAngle * alpha + (1 - alpha) * newPitchAngle;
+    }
+
 #if 0
     if(fabs(ax) > ACCEL_TOL || fabs(ay) > ACCEL_TOL) {
         newYawAngle = atan2(ay, ax);
@@ -85,8 +87,8 @@ void SensorGetOmega(double * pdbRollOmega, double * pdbPitchOmega, double * pdbY
 void SensorGetAngle(double * pdbRollAngle, double * pdbPitchAngle, double * pdbYawAngle)
 {
     *pdbRollAngle = m_dbRollAngle;
-    *pdbPitchAngle = -m_dbPitchAngle;
-    *pdbYawAngle = -m_dbYawAngle;
+    *pdbPitchAngle = m_dbPitchAngle;
+    *pdbYawAngle = m_dbYawAngle;
 }
 
 void SensorSetup() {
@@ -147,8 +149,8 @@ static void GyroScale(int16_t gyro[3])
 void getMotion6_corrected(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz)
 {
     mpu9150_getMotion6(ax, ay, az, gx, gy, gz);
-    *ax = -*ax;
-    *ay = -*ay;
+    *ax = *ax;
+    *ay = *ay;
 
     *gx = *gx;
     *gy = *gy;

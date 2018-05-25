@@ -37,8 +37,8 @@ class QuadModel:
     def gravity(self):
         v = np.array([sin(self.state[0]),
              sin(self.state[1]),
-             max(cos(self.state[0]), cos(self.state[1]))])
-        v = 9.82*v/np.linalg.norm(v)
+             min(cos(self.state[0]), cos(self.state[1]))])
+        v = -9.82*v/np.linalg.norm(v)
 
         return v
 
@@ -62,12 +62,12 @@ def teensyquad_update_loop(teensyquad, simquad):
         v = simquad.gravity()
         omega = simquad.omega()
 
-        omega += np.random.normal(signal_disturbance_mean, signal_disturbance_std)
+        #omega += np.random.normal(signal_disturbance_mean, signal_disturbance_std)
 
         motor = teensyquad.update(v, omega)
         FM = motor_to_phys(motor)
 
-        FM = add_load_disturbance(FM, time)
+        #FM = add_load_disturbance(FM, time)
 
         for _ in range(0,int(dt/sim_dt)):
             simquad.stateUpdate(FM[0], FM[1:4], sim_dt)
@@ -84,9 +84,9 @@ def run():
         print("Failed to arm, state is: {0}".format(teensyquad.getState()))
         return
     teensyquad.setThrottle(0.4)
-    teensyquad.setRollStick(1)
-    teensyquad.setPitchStick(0.7)
-    teensyquad.setYawStick(-0.5)
+    teensyquad.setRollStick(0.1)
+    teensyquad.setPitchStick(0.5)
+    #teensyquad.setYawStick(-0.5)
 
     omega_log, FM_log, angle_log = teensyquad_update_loop(teensyquad, simquad)
     sim_time = np.arange(0,T,sim_dt)

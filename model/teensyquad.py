@@ -51,9 +51,10 @@ class TeensyQuad:
         r = [r_scale * x for x in rotational_velocity]
 
         r = np.clip(r, -RAW_DATA_MAX, RAW_DATA_MAX)
-
-        a[2] = -a[2] # Change the sign of the z acceleration
-
+        tmp = a[0]
+        a[0] = -a[1]
+        a[1] = tmp
+        print(a)
 
         self.quad.setMotion6(int(a[0]), int(a[1]), int(a[2]), int(r[0]), int(r[1]), int(r[2]))
 
