@@ -1,6 +1,9 @@
 #ifndef CONTROL_H
 #define CONTROL_H
 
+#include <stdbool.h>
+
+void controlSetAngleMode(bool angleMode);
 
 void controlSetup();
 

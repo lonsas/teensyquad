@@ -16,6 +16,16 @@
 #define PITCH_GAIN 5
 #define YAW_GAIN 5
 
+bool m_angleMode;
+
+void controlSetAngleMode(bool angleMode)
+{
+    if(!m_angleMode && angleMode) {
+        angleControlSetup();
+    }
+    m_angleMode = angleMode;
+}
+
 void controlSetup()
 {
     gyroControlSetup();
@@ -43,24 +53,24 @@ void doControl() {
 
     double output[4];
 
-#if 0
-    receiverGetControls(&throttle, &rollRef, &pitchRef, &yawOmegaRef);
+    if(m_angleMode) {
+        receiverGetControls(&throttle, &rollRef, &pitchRef, &yawOmegaRef);
 
-    /* Convert the receiver controls to relevant units */
-    /* TODO: Make the scalings tunable */
-    rollRef *= MAX_ANGLE;
-    pitchRef *= MAX_ANGLE;
-    yawOmegaRef *= YAW_GAIN;
+        /* Convert the receiver controls to relevant units */
+        /* TODO: Make the scalings tunable */
+        rollRef *= MAX_ANGLE;
+        pitchRef *= MAX_ANGLE;
+        yawOmegaRef *= YAW_GAIN;
 
-    setAngleRef(rollRef, pitchRef, 0); /* No yaw angle control */
-    angleCalculateControl(&rollOmegaRef, &pitchOmegaRef, &dummy);
-#else
-    receiverGetControls(&throttle, &rollOmegaRef, &pitchOmegaRef, &yawOmegaRef);
+        setAngleRef(rollRef, pitchRef, 0); /* No yaw angle control */
+        angleCalculateControl(&rollOmegaRef, &pitchOmegaRef, &dummy);
+    } else {
+        receiverGetControls(&throttle, &rollOmegaRef, &pitchOmegaRef, &yawOmegaRef);
 
-    rollOmegaRef *= ROLL_GAIN;
-    pitchOmegaRef *= PITCH_GAIN;
-    yawOmegaRef *= YAW_GAIN;
-#endif
+        rollOmegaRef *= ROLL_GAIN;
+        pitchOmegaRef *= PITCH_GAIN;
+        yawOmegaRef *= YAW_GAIN;
+    }
     setOmegaRef(rollOmegaRef, pitchOmegaRef, yawOmegaRef);
     gyroCalculateControl(&rollOmegaDot, &pitchOmegaDot, &yawOmegaDot);
     mix(throttle, 12, &rollOmegaDot, &pitchOmegaDot, &yawOmegaDot, output);
