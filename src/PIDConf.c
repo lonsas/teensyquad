@@ -5,8 +5,17 @@
 #include "eeprom.h"
 
 static const PidParameters gyroDefaultPidParameters = {
-  .K = 0.04,
-  .Ti = 0.25,
+  .K = 0.7,
+  .Ti = 0.1,
+  .Td = 0,
+  .Tt = 0,
+  .b = 1.5,
+  .h = 0.001,
+};
+
+static const PidParameters gyroYawDefaultPidParameters = {
+  .K = 3,
+  .Ti = 0.1,
   .Td = 0,
   .Tt = 0,
   .b = 1.5,
@@ -14,8 +23,8 @@ static const PidParameters gyroDefaultPidParameters = {
 };
 
 static const PidParameters angleDefaultPidParameters = {
-  .K = 70,
-  .Ti = 0.06,
+  .K = 0,
+  .Ti = 0,
   .Td = 0,
   .Tt = 0,
   .b = 2,
@@ -38,7 +47,7 @@ void PIDConfSetDefault()
 {
   g_gyroRollPidParameters = gyroDefaultPidParameters;
   g_gyroPitchPidParameters = gyroDefaultPidParameters;
-  g_gyroYawPidParameters = gyroDefaultPidParameters;
+  g_gyroYawPidParameters = gyroYawDefaultPidParameters;
 
   g_angleRollPidParameters = angleDefaultPidParameters;
   g_anglePitchPidParameters = angleDefaultPidParameters;
