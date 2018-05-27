@@ -16,7 +16,7 @@
 #define PITCH_GAIN 5
 #define YAW_GAIN 5
 
-bool m_angleMode;
+bool m_angleMode = true;
 
 void controlSetAngleMode(bool angleMode)
 {
@@ -78,10 +78,9 @@ void doControl() {
     EscControlOutput(output);
 
     gyroUpdate(rollOmegaDot, pitchOmegaDot, yawOmegaDot);
-#if 0
+
     /* TODO: Add tracking for anti windup */
     angleUpdate(rollOmegaRef, pitchOmegaRef, yawOmegaRef);
-#endif
 
 }
 

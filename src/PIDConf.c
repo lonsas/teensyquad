@@ -5,31 +5,32 @@
 #include "eeprom.h"
 
 static const PidParameters gyroDefaultPidParameters = {
-  .K = 0.7,
+  .K = 2,
   .Ti = 0.1,
   .Td = 0,
   .Tt = 0,
-  .b = 1.5,
+  .b = 1.0,
   .h = 0.001,
 };
 
 static const PidParameters gyroYawDefaultPidParameters = {
-  .K = 3,
+  .K = 8,
   .Ti = 0.1,
   .Td = 0,
   .Tt = 0,
-  .b = 1.5,
+  .b = 1.0,
   .h = 0.001,
 };
 
 static const PidParameters angleDefaultPidParameters = {
-  .K = 0,
+  .K = 10,
   .Ti = 0,
   .Td = 0,
   .Tt = 0,
-  .b = 2,
+  .b = 1,
   .h = 0.001,
 };
+
 
 /* Global PID parameters */
 PidParameters g_gyroRollPidParameters;
