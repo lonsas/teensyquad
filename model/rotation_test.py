@@ -7,10 +7,14 @@ import matplotlib.pyplot as plt
 T = 2
 dt = 0.001
 sim_dt = dt/1
+control_lag = int(0.01/dt)
+signal_lag = int(0.005/dt)
 
-signal_disturbance_std = 0.0 #rad/s
-signal_disturbance_mean = 0.2
-load_disturbance = np.array([0, 0.1, 0.1, 0.1]) #Nm
+signal_disturbance_std = 0.05 #rad/s
+signal_disturbance_mean = 0.0
+load_disturbance_std = np.array([0, 0.01, 0.01, 0.01])
+load_disturbance_mean0 = np.array([0, 0, 0, 0]) #Nm
+load_disturbance_mean1 = np.array([0, 0.1, 0.1, 0.1]) #Nm
 load_disturbance_t = 1 #s
 
 def motor_to_phys(motors):
@@ -50,30 +54,37 @@ class QuadModel:
 
 def add_load_disturbance(FM, time):
     if(time > load_disturbance_t):
-        return FM + load_disturbance
+        load_disturbance_mean = load_disturbance_mean1
+    else:
+        load_disturbance_mean = load_disturbance_mean0
+    FM += np.random.normal(load_disturbance_mean, load_disturbance_std)
     return FM
 
 def teensyquad_update_loop(teensyquad, simquad):
-    omega_log = np.empty(shape=[0,3])
-    angle_log = np.empty(shape=[0,3])
-    FM_log = np.empty(shape=[0,4])
+    omega_log = np.zeros(shape=[signal_lag,3])
+    angle_log = np.zeros(shape=[signal_lag,3])
+    v_log = np.zeros(shape=[signal_lag,3])
+    FM_log = np.zeros(shape=[control_lag,4])
+
     for time in np.arange(0, T, dt):
 
-        v = simquad.gravity()
-        omega = simquad.omega()
+        v = v_log[-(signal_lag),:]
+        omega = omega_log[-(signal_lag),:].copy()
 
-        #omega += np.random.normal(signal_disturbance_mean, signal_disturbance_std)
+        omega += np.random.normal(signal_disturbance_mean, signal_disturbance_std)
 
         motor = teensyquad.update(v, omega)
         FM = motor_to_phys(motor)
 
         #FM = add_load_disturbance(FM, time)
 
+        FM_log = np.vstack((FM_log, FM))
+        FM = FM_log[-(control_lag+1),:] # Lag
         for _ in range(0,int(dt/sim_dt)):
             simquad.stateUpdate(FM[0], FM[1:4], sim_dt)
-            omega_log = np.vstack((omega_log, simquad.omega()))
-            FM_log = np.vstack((FM_log, FM))
-            angle_log = np.vstack((angle_log, simquad.angle()))
+        omega_log = np.vstack((omega_log, simquad.omega()))
+        angle_log = np.vstack((angle_log, simquad.angle()))
+        v_log = np.vstack((v_log, simquad.gravity()))
     return (omega_log, FM_log, angle_log)
 
 def run():
@@ -85,12 +96,12 @@ def run():
         return
     teensyquad.setThrottle(0.4)
     teensyquad.setRollStick(0.1)
-    teensyquad.setPitchStick(0.5)
+    #teensyquad.setPitchStick(0.5)
     #teensyquad.setYawStick(-0.5)
 
     omega_log, FM_log, angle_log = teensyquad_update_loop(teensyquad, simquad)
-    sim_time = np.arange(0,T,sim_dt)
-    control_time = np.arange(0,T,dt)
+    sim_time = np.linspace(0,len(omega_log)*dt,len(omega_log))
+    control_time = np.linspace(0,len(FM_log)*dt,len(FM_log))
     plt.figure(1)
     plt.subplot(221)
     plt.title('Simulation omega')
@@ -99,6 +110,7 @@ def run():
     plt.plot(sim_time,omega_log[:,0], label='roll')
     plt.plot(sim_time,omega_log[:,1], label='pitch')
     plt.plot(sim_time,omega_log[:,2], label='yaw')
+    plt.grid()
     plt.legend()
 
     plt.subplot(222)
@@ -108,6 +120,7 @@ def run():
     plt.plot(sim_time,angle_log[:,0], label='roll')
     plt.plot(sim_time,angle_log[:,1], label='pitch')
     plt.plot(sim_time,angle_log[:,2], label='yaw')
+    plt.grid()
     plt.legend()
 
     plt.subplot(212)
@@ -118,6 +131,7 @@ def run():
     plt.plot(control_time,FM_log[:,2], label='pitch')
     plt.plot(control_time,FM_log[:,3], label='yaw')
     plt.legend()
+    plt.grid()
     plt.show()
 
 

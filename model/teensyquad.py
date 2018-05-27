@@ -54,7 +54,6 @@ class TeensyQuad:
         tmp = a[0]
         a[0] = -a[1]
         a[1] = tmp
-        print(a)
 
         self.quad.setMotion6(int(a[0]), int(a[1]), int(a[2]), int(r[0]), int(r[1]), int(r[2]))
 
