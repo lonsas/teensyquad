@@ -51,6 +51,10 @@ void doControl() {
     double pitchOmegaDot;
     double yawOmegaDot;
 
+    double rollOmegaSat;
+    double pitchOmegaSat;
+    double yawOmegaSat;
+
     double output[4];
 
     if(m_angleMode) {
@@ -79,8 +83,10 @@ void doControl() {
 
     gyroUpdate(rollOmegaDot, pitchOmegaDot, yawOmegaDot);
 
-    /* TODO: Add tracking for anti windup */
-    angleUpdate(rollOmegaRef, pitchOmegaRef, yawOmegaRef);
+    if(m_angleMode) {
+      gyroTrackingSignal(&rollOmegaSat, &pitchOmegaSat, &yawOmegaSat);
+      angleUpdate(rollOmegaSat, pitchOmegaSat, yawOmegaSat);
+    }
 
 }
 

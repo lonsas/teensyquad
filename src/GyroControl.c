@@ -1,6 +1,7 @@
 #include "GyroControl.h"
 #include "PIDConf.h"
 #include "Sensor.h"
+#include <math.h>
 
 Pid m_tPidOmegaRoll;
 Pid m_tPidOmegaPitch;
@@ -9,6 +10,10 @@ Pid m_tPidOmegaYaw;
 double m_dbRollOmegaRef;
 double m_dbPitchOmegaRef;
 double m_dbYawOmegaRef;
+
+double m_dbOmegaDotRollControlSat;
+double m_dbOmegaDotPitchControlSat;
+double m_dbOmegaDotYawControlSat;
 
 void setOmegaRef(double dbRollOmegaRef, double dbPitchOmegaRef, double dbYawOmegaRef)
 {
@@ -53,4 +58,35 @@ void gyroUpdate(double dbOmegaDotRollControlSat, double dbOmegaDotPitchControlSa
     updateState(&m_tPidOmegaRoll, dbOmegaDotRollControlSat);
     updateState(&m_tPidOmegaPitch, dbOmegaDotPitchControlSat);
     updateState(&m_tPidOmegaYaw, dbOmegaDotYawControlSat);
+
+    m_dbOmegaDotRollControlSat = dbOmegaDotRollControlSat;
+    m_dbOmegaDotPitchControlSat = dbOmegaDotPitchControlSat;
+    m_dbOmegaDotYawControlSat = dbOmegaDotYawControlSat;
+}
+
+void gyroTrackingSignal(double * pdbOmegaRollSat, double * pdbOmegaPitchSat, double * pdbOmegaYawSat)
+{
+    double dbRollOmega;
+    double dbPitchOmega;
+    double dbYawOmega;
+
+    SensorGetOmega(&dbRollOmega, &dbPitchOmega, &dbYawOmega);
+
+    if(fabs(checkSignalDiff(&m_tPidOmegaRoll, m_dbOmegaDotRollControlSat)) > 1e-1) {
+      *pdbOmegaRollSat = dbRollOmega;
+    } else {
+      *pdbOmegaRollSat = m_dbRollOmegaRef;
+    }
+
+    if(fabs(checkSignalDiff(&m_tPidOmegaPitch, m_dbOmegaDotPitchControlSat)) > 1e-1) {
+      *pdbOmegaPitchSat = dbPitchOmega;
+    } else {
+      *pdbOmegaPitchSat = m_dbPitchOmegaRef;
+    }
+
+    if(fabs(checkSignalDiff(&m_tPidOmegaYaw, m_dbOmegaDotYawControlSat)) > 1e-1) {
+      *pdbOmegaYawSat = dbYawOmega;
+    } else {
+      *pdbOmegaYawSat = m_dbYawOmegaRef;
+    }
 }

@@ -125,3 +125,8 @@ PidInternalParameters tCalculateParameters(PidParameters ptParameters)
 
     return tPidInternalParameters;
 }
+
+double checkSignalDiff(Pid * ptPid, double u) {
+  return ptPid->tState.u - u;
+}
+

@@ -40,5 +40,7 @@ extern double dbCalculateAndUpdate(Pid * pPid, double ref, double y, double old_
  */
 extern void resetState(Pid * ptPid);
 
+extern double checkSignalDiff(Pid * ptPid, double u);
+
 #endif /* PID_H */
 

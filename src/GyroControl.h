@@ -14,4 +14,7 @@ void gyroCalculateControl(double * pdbOmegaDotRollControl, \
 
 void gyroUpdate(double dbOmegaDotRollControlSat, double dbOmegaDotPitchControlSat, double dbOmegaDotYawControlSat);
 
+
+void gyroTrackingSignal(double * pdbOmegaRollSat, double * pdbOmegaPitchSat, double * pdbOmegaYawSat);
+
 #endif /* GYROCONTROL_H */
