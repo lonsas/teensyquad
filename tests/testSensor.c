@@ -69,7 +69,7 @@ START_TEST(testSensorUpdateAccelerationChange)
     SensorSetup();
     g_ax = 1/ACCEL_SCALE;
     g_ay = 0;
-    g_az = 1/ACCEL_SCALE;
+    g_az = -1/ACCEL_SCALE;
     g_gx = 0;
     g_gy = 0;
     g_gz = 0;
