@@ -10,8 +10,10 @@ sim_dt = dt/1
 control_lag = int(0.01/dt)
 signal_lag = int(0.005/dt)
 
-signal_disturbance_std = 0.05 #rad/s
-signal_disturbance_mean = 0.0
+omega_signal_disturbance_std = 0.05 #rad/s
+omega_signal_disturbance_mean = 0.0
+acc_signal_disturbance_std = 0.5 #m/s^2
+acc_signal_disturbance_mean = 0.0
 load_disturbance_std = np.array([0, 0.01, 0.01, 0.01])
 load_disturbance_mean0 = np.array([0, 0, 0, 0]) #Nm
 load_disturbance_mean1 = np.array([0, 0.1, 0.1, 0.1]) #Nm
@@ -71,7 +73,8 @@ def teensyquad_update_loop(teensyquad, simquad):
         v = v_log[-(signal_lag),:]
         omega = omega_log[-(signal_lag),:].copy()
 
-        omega += np.random.normal(signal_disturbance_mean, signal_disturbance_std)
+        omega += np.random.normal(omega_signal_disturbance_mean, omega_signal_disturbance_std)
+        v += np.random.normal(acc_signal_disturbance_mean, acc_signal_disturbance_std)
 
         motor = teensyquad.update(v, omega)
         FM = motor_to_phys(motor)
