@@ -7,16 +7,16 @@ import matplotlib.pyplot as plt
 T = 2
 dt = 0.001
 sim_dt = dt/1
-control_lag = int(0.01/dt)
-signal_lag = int(0.005/dt)
+control_lag = int(0.00/dt)
+signal_lag = int(0.000/dt)
 
 omega_signal_disturbance_std = 0.05 #rad/s
 omega_signal_disturbance_mean = 0.0
 acc_signal_disturbance_std = 0.5 #m/s^2
 acc_signal_disturbance_mean = 0.0
 load_disturbance_std = np.array([0, 0.01, 0.01, 0.01])
-load_disturbance_mean0 = np.array([0, 0, 0, 0]) #Nm
-load_disturbance_mean1 = np.array([0, 0.1, 0.1, 0.1]) #Nm
+load_disturbance_mean0 = np.array([0, 0.0, 0, 0]) #Nm
+load_disturbance_mean1 = np.array([0, 0.0, 0, 0]) #Nm
 load_disturbance_t = 1 #s
 
 def motor_to_phys(motors):
@@ -59,30 +59,31 @@ def add_load_disturbance(FM, time):
         load_disturbance_mean = load_disturbance_mean1
     else:
         load_disturbance_mean = load_disturbance_mean0
+        load_disturbance_mean[1] = -FM[1] - 0.0005
     FM += np.random.normal(load_disturbance_mean, load_disturbance_std)
     return FM
 
 def teensyquad_update_loop(teensyquad, simquad):
-    omega_log = np.zeros(shape=[signal_lag,3])
-    angle_log = np.zeros(shape=[signal_lag,3])
-    v_log = np.zeros(shape=[signal_lag,3])
+    omega_log = np.zeros(shape=[signal_lag+1,3])
+    angle_log = np.zeros(shape=[signal_lag+1,3])
+    v_log = np.zeros(shape=[signal_lag+1,3])
     FM_log = np.zeros(shape=[control_lag,4])
 
     for time in np.arange(0, T, dt):
 
         v = v_log[-(signal_lag),:]
-        omega = omega_log[-(signal_lag),:].copy()
+        omega = omega_log[-(signal_lag+1),:].copy()
 
-        omega += np.random.normal(omega_signal_disturbance_mean, omega_signal_disturbance_std)
-        v += np.random.normal(acc_signal_disturbance_mean, acc_signal_disturbance_std)
+        #omega += np.random.normal(omega_signal_disturbance_mean, omega_signal_disturbance_std)
+        #v += np.random.normal(acc_signal_disturbance_mean, acc_signal_disturbance_std)
 
         motor = teensyquad.update(v, omega)
         FM = motor_to_phys(motor)
-
-        #FM = add_load_disturbance(FM, time)
-
         FM_log = np.vstack((FM_log, FM))
-        FM = FM_log[-(control_lag+1),:] # Lag
+        FM = FM_log[-(control_lag+1),:].copy() # Lag
+
+        FM = add_load_disturbance(FM, time)
+
         for _ in range(0,int(dt/sim_dt)):
             simquad.stateUpdate(FM[0], FM[1:4], sim_dt)
         omega_log = np.vstack((omega_log, simquad.omega()))
