@@ -105,8 +105,7 @@ def run():
         print("Failed to arm, state is: {0}".format(teensyquad.getState()))
         return
     teensyquad.setThrottle(1)
-    #TODO: Rollstick = 1 fails
-    teensyquad.setRollStick(0.9)
+    teensyquad.setRollStick(1)
     #teensyquad.setPitchStick(0.5)
     #teensyquad.setYawStick(-0.5)
 

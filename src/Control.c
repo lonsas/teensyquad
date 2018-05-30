@@ -10,7 +10,7 @@
 #define PI 3.1415
 #endif
 
-#define MAX_ANGLE PI*0.5
+#define MAX_ANGLE PI*0.25
 #define MAX_OMEGA PI*2
 #define ROLL_GAIN 5
 #define PITCH_GAIN 5
