@@ -7,27 +7,33 @@ import matplotlib.pyplot as plt
 T = 2
 dt = 0.001
 sim_dt = dt/1
-control_lag = int(0.00/dt)
-signal_lag = int(0.000/dt)
+control_lag_t = 0
+signal_lag_t = 0
 
-omega_signal_disturbance_std = 0.05 #rad/s
-omega_signal_disturbance_mean = 0.0
-acc_signal_disturbance_std = 0.5 #m/s^2
+omega_signal_disturbance_std = [0.0, 0, 0] #rad/s
+omega_signal_disturbance_mean = [0, 0, 0]
+acc_signal_disturbance_std = 0.0 #m/s^2
 acc_signal_disturbance_mean = 0.0
-load_disturbance_std = np.array([0, 0.01, 0.01, 0.01])
+load_disturbance_std = np.array([0, 0.00, 0.00, 0.00])
 load_disturbance_mean0 = np.array([0, 0.0, 0, 0]) #Nm
 load_disturbance_mean1 = np.array([0, 0.0, 0, 0]) #Nm
 load_disturbance_t = 1 #s
+control_lag = int(control_lag_t/dt)
+signal_lag = int(signal_lag_t/dt)
 
-def motor_to_phys(motors):
-    """ Calculates Forces and torque from motor intensities """
-    F = [params.MotorF * x for x in motors] # Scale
-
-    return params.A.dot(F)
+motor_filter_k = 1
 
 class QuadModel:
     def __init__(self):
         self.state = np.array([0,0,0,0,0,0,0,0,0],dtype=float)
+        self.prev_F = np.array([0,0,0,0],dtype=float)
+
+    def motor_to_phys(self, motors):
+        """ Calculates Forces and torque from motor intensities """
+        F = np.array([params.MotorF * x for x in motors]) # Scale
+        F = motor_filter_k * F + (1-motor_filter_k) * self.prev_F# Filter motor output
+        self.prev_F = F
+        return params.A.dot(F)
 
     def stateUpdate(self, F, M, dt):
         angle = self.state[0:3]
@@ -59,7 +65,7 @@ def add_load_disturbance(FM, time):
         load_disturbance_mean = load_disturbance_mean1
     else:
         load_disturbance_mean = load_disturbance_mean0
-        load_disturbance_mean[1] = -FM[1] - 0.0005
+        #load_disturbance_mean[1] = -FM[1] + 0.001
     FM += np.random.normal(load_disturbance_mean, load_disturbance_std)
     return FM
 
@@ -71,14 +77,14 @@ def teensyquad_update_loop(teensyquad, simquad):
 
     for time in np.arange(0, T, dt):
 
-        v = v_log[-(signal_lag),:]
+        v = v_log[-(signal_lag+1),:].copy()
         omega = omega_log[-(signal_lag+1),:].copy()
 
-        #omega += np.random.normal(omega_signal_disturbance_mean, omega_signal_disturbance_std)
-        #v += np.random.normal(acc_signal_disturbance_mean, acc_signal_disturbance_std)
+        omega += np.random.normal(omega_signal_disturbance_mean, omega_signal_disturbance_std)
+        v += np.random.normal(acc_signal_disturbance_mean, acc_signal_disturbance_std)
 
         motor = teensyquad.update(v, omega)
-        FM = motor_to_phys(motor)
+        FM = simquad.motor_to_phys(motor)
         FM_log = np.vstack((FM_log, FM))
         FM = FM_log[-(control_lag+1),:].copy() # Lag
 
@@ -98,8 +104,9 @@ def run():
     if(teensyquad.getState() != TeensyQuadState.ARMED):
         print("Failed to arm, state is: {0}".format(teensyquad.getState()))
         return
-    teensyquad.setThrottle(0.4)
-    teensyquad.setRollStick(0.1)
+    teensyquad.setThrottle(1)
+    #TODO: Rollstick = 1 fails
+    teensyquad.setRollStick(0.9)
     #teensyquad.setPitchStick(0.5)
     #teensyquad.setYawStick(-0.5)
 
