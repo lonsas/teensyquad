@@ -16,7 +16,7 @@
 #define PITCH_GAIN 5
 #define YAW_GAIN 5
 
-bool m_angleMode = true;
+bool m_angleMode = false;
 
 void controlSetAngleMode(bool angleMode)
 {

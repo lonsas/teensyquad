@@ -84,11 +84,15 @@ static void stateReadyWaitUpdate()
     /* Arm? */
     if(!prevArmSignal && receiverSignalHigh(AUX2)) {
         if(receiverSignalLow(THROTTLE) &&
-           SensorAngleIsLevel() &&
            SensorOmegaIsZero()) {
             /* TODO: check all other controls that they are in the middle also */
             TRANSITION(&stateArmed);
         }
+    }
+    if(receiverSignalHigh(AUX1)) {
+        controlSetAngleMode(true);
+    } else {
+        controlSetAngleMode(false);
     }
     /* Update */
     prevArmSignal = receiverSignalHigh(AUX2);
