@@ -97,18 +97,16 @@ bool receiverOk()
 
 void receiverFailSafe()
 {
-    static int32_t prevAux1 = 1000;
-    static int32_t prevAux2 = 1000;
+    static int32_t prevAux1 = SIGNAL_MIN;
     if(receiverOk()) {
         prevAux1 = width[AUX1];
-        prevAux2 = width[AUX2];
     } else {
         width[THROTTLE] = SIGNAL_MIN;
         width[ROLL] = 1500;
         width[PITCH] = 1500;
         width[YAW] = 1500;
         width[AUX1] = prevAux1;
-        width[AUX2] = prevAux2;
+        width[AUX2] = SIGNAL_MIN;
     }
 }
 
