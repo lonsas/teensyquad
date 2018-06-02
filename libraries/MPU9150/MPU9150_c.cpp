@@ -11,6 +11,6 @@ void mpu9150_initialize() {
 }
 
 void mpu9150_getMotion6(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz) {
-    mpu9150.getMotion6(ay, ax, az, gy, gx, gz);
+    mpu9150.getMotion6(ax, ay, az, gx, gy, gz);
 }
 

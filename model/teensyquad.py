@@ -11,8 +11,8 @@ class TeensyQuadState(Enum):
     USB_CONNECTED = 3
 
 class QuadControl(Enum):
-    PITCH =  0
-    ROLL =  1
+    ROLL =  0
+    PITCH =  1
     THROTTLE = 2
     YAW = 3
     AUX1 = 4
