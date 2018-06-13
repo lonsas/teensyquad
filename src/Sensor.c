@@ -4,6 +4,10 @@
 #include "MCUConf.h"
 #include <math.h>
 
+#define X 0
+#define Y 1
+#define Z 2
+
 static double m_dbRollOmega;
 static double m_dbPitchOmega;
 static double m_dbYawOmega;
@@ -20,32 +24,37 @@ static int16_t m_axOffset;
 static int16_t m_ayOffset;
 static int16_t m_azOffset;
 
+static double m_acceleration[3] = {0, 0, 0};
+
 static void GyroScale(int16_t gyro[3]);
+static void AccScale(int16_t acc[3]);
 
 static void getMotion6_corrected(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz);
 
 static void SensorAngleUpdate(double gx, double gy, double gz, double ax, double ay, double az)
 {
-    const double alpha = 1;
+    const double alpha = 0.99;
     const double gyro_gain = 1;
+
     double newRollAngle;
     double newPitchAngle;
     double newYawAngle;
+
 
     /* Update with gyro */
     m_dbRollAngle += gx * SAMPLE_TIME_S * gyro_gain;
     m_dbPitchAngle += gy * SAMPLE_TIME_S * gyro_gain;
     m_dbYawAngle += gz * SAMPLE_TIME_S * gyro_gain;
 
-    //if(fabs(ay) > ACCEL_TOL || fabs(az) > ACCEL_TOL) {
+     if(fabs(ay) > ACCEL_TOL || fabs(az) > ACCEL_TOL) {
         newRollAngle = atan2(ay, az);
         m_dbRollAngle = m_dbRollAngle * alpha + (1 - alpha) * newRollAngle;
-    //}
+    }
 
-    //if(fabs(ax) > ACCEL_TOL || fabs(az) > ACCEL_TOL) {
+    if(fabs(ax) > ACCEL_TOL || fabs(az) > ACCEL_TOL) {
         newPitchAngle = atan2(-ax, az);
         m_dbPitchAngle = m_dbPitchAngle * alpha + (1 - alpha) * newPitchAngle;
-    //}
+    }
 
 #if 0
     if(fabs(ax) > ACCEL_TOL || fabs(ay) > ACCEL_TOL) {
@@ -113,11 +122,12 @@ void SensorUpdate() {
     getMotion6_corrected(&acc[0], &acc[1], &acc[2], &gyro[0], &gyro[1], &gyro[2]);
 
     GyroScale(gyro);
+    AccScale(acc);
 #if 0
     MadgwickAHRSupdateIMU(m_dbRollOmega, m_dbPitchOmega, m_dbYawOmega, acc[0], acc[1], acc[2]);
     MadgwickAHRSGetAngles(&m_dbRollAngle, &m_dbPitchAngle, &m_dbYawAngle);
 #else
-    SensorAngleUpdate(m_dbRollOmega, m_dbPitchOmega, m_dbYawOmega, acc[0], acc[1], acc[2]);
+    SensorAngleUpdate(m_dbRollOmega, m_dbPitchOmega, m_dbYawOmega, m_acceleration[X], m_acceleration[Y], m_acceleration[Z]);
 #endif
 }
 
@@ -145,6 +155,14 @@ static void GyroScale(int16_t gyro[3])
     m_dbRollOmega = (gyro[0] - m_gxOffset) * GYRO_SCALE * alpha + m_dbRollOmega * (1 - alpha);
     m_dbPitchOmega = (gyro[1] - m_gyOffset) * GYRO_SCALE * alpha + m_dbPitchOmega * (1 - alpha);
     m_dbYawOmega = (gyro[2] - m_gzOffset) * GYRO_SCALE * alpha + m_dbYawOmega * (1 - alpha);
+}
+
+static void AccScale(int16_t acc[3])
+{
+    const double alpha = 0.1;
+    for(int i = 0; i < 3; i++) {
+        m_acceleration[i] = acc[i] * ACCEL_SCALE * alpha + m_acceleration[i] * (1 - alpha);
+    }
 }
 
 void getMotion6_corrected(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz)

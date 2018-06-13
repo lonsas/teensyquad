@@ -150,7 +150,7 @@ void stateUpdate()
 void stateDo()
 {
     static unsigned int iteration = 0;
-    if(m_sensorActive && iteration % 1 == 0) {
+    if(m_sensorActive) {
         SensorUpdate();
     }
     if(m_controlActive) {
