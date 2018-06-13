@@ -74,7 +74,7 @@ THE SOFTWARE.
 //#define I2CDEV_SERIAL_DEBUG
 
 
-#include "WProgram.h"
+//#include "WProgram.h"
 #include <i2c_t3.h>
 #define BUFFER_LENGTH 32
 

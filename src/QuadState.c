@@ -63,7 +63,8 @@ static void stateStartupUpdate()
 {
     /* USB? */
     if(usbConnected()) {
-        TRANSITION(&stateUsbConnected);
+        m_usbActive = true;
+        //TRANSITION(&stateUsbConnected);
     }
     /* Transition */
     if(SensorOk() && receiverOk()) {
@@ -149,7 +150,7 @@ void stateUpdate()
 void stateDo()
 {
     static unsigned int iteration = 0;
-    if(m_sensorActive) {
+    if(m_sensorActive && iteration % 1 == 0) {
         SensorUpdate();
     }
     if(m_controlActive) {

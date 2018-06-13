@@ -10,6 +10,7 @@
 #include "COBS.h"
 #include "MainLoop.h"
 #include "Receiver.h"
+#include "MPU9150_c.h"
 
 static bool m_correctData;
 static bool m_sendLog;
@@ -30,7 +31,7 @@ void usbSetup()
 {
     pinMode(USB_VOLT_PIN, INPUT);
     m_correctData = false;
-    m_sendLog = false;
+    m_sendLog = true;
 }
 bool usbConnected()
 {
@@ -103,9 +104,15 @@ static void sendSensorLog()
     struct UsbLogPacket packet;
     size_t size = sizeof(packet);
     double * sensorData = packet.sensorData;
+    int16_t tmp[6];
     packet.command = USB_LOG_SENSOR;
     SensorGetOmega(&sensorData[0], &sensorData[1], &sensorData[2]);
     SensorGetAngle(&sensorData[3], &sensorData[4], &sensorData[5]);
+/*    mpu9150_getMotion6(&tmp[0], &tmp[1], &tmp[2],&tmp[3], &tmp[4], &tmp[5]);
+    int i;
+    for (i = 0; i < 6; i++) {
+        sensorData[i] = tmp[i];
+    }*/
     sendPacket(&packet, size);
 }
 

@@ -6,30 +6,30 @@
 
 static const PidParameters gyroDefaultPidParameters = {
   .K = 2,
-  .Ti = 0.1,
+  .Ti = 0,
   .Td = 0,
-  .Tt = 0.05,
+  .Tt = 0,
   .b = 1.0,
   .h = 0.001,
 };
 
 static const PidParameters gyroYawDefaultPidParameters = {
-  .K = 8,
-  .Ti = 0.1,
+  .K = 0,
+  .Ti = 0,
   .Td = 0,
-  .Tt = 0.05,
+  .Tt = 0,
   .b = 1.0,
   .h = 0.001,
 };
 
 static const PidParameters angleDefaultPidParameters = {
-  .K = 15,
-  .Ti = 0.25,
+  .K = 5,
+  .Ti = 0,
   .Td = 0,
-  .Tt = 0.2,
+  .Tt = 0,
   .b = 1,
   .h = 0.001,
-  .N = 10,
+  .N = 0,
 };
 
 

@@ -26,25 +26,26 @@ static void getMotion6_corrected(int16_t* ax, int16_t* ay, int16_t* az, int16_t*
 
 static void SensorAngleUpdate(double gx, double gy, double gz, double ax, double ay, double az)
 {
-    const double alpha = 0.3;
+    const double alpha = 1;
+    const double gyro_gain = 1;
     double newRollAngle;
     double newPitchAngle;
     double newYawAngle;
 
     /* Update with gyro */
-    m_dbRollAngle += gx * SAMPLE_TIME_S;
-    m_dbPitchAngle += gy * SAMPLE_TIME_S;
-    m_dbYawAngle += gz * SAMPLE_TIME_S;
+    m_dbRollAngle += gx * SAMPLE_TIME_S * gyro_gain;
+    m_dbPitchAngle += gy * SAMPLE_TIME_S * gyro_gain;
+    m_dbYawAngle += gz * SAMPLE_TIME_S * gyro_gain;
 
-    if(fabs(ay) > ACCEL_TOL || fabs(az) > ACCEL_TOL) {
-        newRollAngle = atan2(-ay, -az);
+    //if(fabs(ay) > ACCEL_TOL || fabs(az) > ACCEL_TOL) {
+        newRollAngle = atan2(ay, az);
         m_dbRollAngle = m_dbRollAngle * alpha + (1 - alpha) * newRollAngle;
-    }
+    //}
 
-    if(fabs(ax) > ACCEL_TOL || fabs(az) > ACCEL_TOL) {
-        newPitchAngle = atan2(ax, -az);
+    //if(fabs(ax) > ACCEL_TOL || fabs(az) > ACCEL_TOL) {
+        newPitchAngle = atan2(-ax, az);
         m_dbPitchAngle = m_dbPitchAngle * alpha + (1 - alpha) * newPitchAngle;
-    }
+    //}
 
 #if 0
     if(fabs(ax) > ACCEL_TOL || fabs(ay) > ACCEL_TOL) {
@@ -140,10 +141,10 @@ bool SensorOmegaIsZero()
 
 static void GyroScale(int16_t gyro[3])
 {
-    const double alpha = 0.1;
-    m_dbRollOmega = (gyro[0] - m_gxOffset) * GYRO_SCALE;
-    m_dbPitchOmega = (gyro[1] - m_gyOffset) * GYRO_SCALE;
-    m_dbYawOmega = (gyro[2] - m_gzOffset) * GYRO_SCALE;
+    const double alpha = 0.8;
+    m_dbRollOmega = (gyro[0] - m_gxOffset) * GYRO_SCALE * alpha + m_dbRollOmega * (1 - alpha);
+    m_dbPitchOmega = (gyro[1] - m_gyOffset) * GYRO_SCALE * alpha + m_dbPitchOmega * (1 - alpha);
+    m_dbYawOmega = (gyro[2] - m_gzOffset) * GYRO_SCALE * alpha + m_dbYawOmega * (1 - alpha);
 }
 
 void getMotion6_corrected(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz)

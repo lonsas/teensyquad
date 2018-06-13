@@ -85,7 +85,7 @@ void doControl() {
 
     if(m_angleMode) {
       gyroTrackingSignal(&rollOmegaSat, &pitchOmegaSat, &yawOmegaSat);
-      angleUpdate(rollOmegaSat, pitchOmegaSat, yawOmegaSat);
+      //angleUpdate(rollOmegaSat, pitchOmegaSat, yawOmegaSat);
     }
 
 }
