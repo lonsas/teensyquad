@@ -70,10 +70,22 @@ class TeensyGUI(QtGui.QMainWindow, design.Ui_MainWindow):
         self.timer.timeout.connect(self.updatePlots)
         self.timer.start(50)
 
+    def savePID(self):
+        fields = [g_K.get(), g_Ti.get(), g_Td.get(), gy_K.get(), gy_Ti.get(), gy_Td.get(), a_K.get(), a_Ti.get(), a_Td.get()]
+        field_data = [float(x) for x in fields]
+
+    def loadPID(self, gyro_pids, angle_pids):
+        self.gyro_pids = gyro_pids
+        self.angle_pids = angle_pids
+#        self.g_K.set(
+
 
     def initialize(self, dataserial):
         self.dataserial = dataserial
         self.connect(dataserial, dataserial.signal, self.updateData)
+        self.connect(self.saveButton, QtCore.SIGNAL("clicked()"), dataserial.savePID)
+        self.connect(self.loadButton, QtCore.SIGNAL("clicked()"), dataserial.loadPID)
+        self.connect(dataserial, dataserial.loadPIDDone, self.loadPID)
 
     def updateData(self, data):
         self.accx.append(data.accx)
@@ -129,31 +141,47 @@ class TeensySerial(QThread):
         USB_LOG_STATS = 8
         USB_LOG_RECEIVER = 9
 
-
-    def __init__(self, baudrate):
+    def __init__(self):
         QThread.__init__(self)
-        self.teensy_port = self.getTeensyPort()
-        self.teensy = serial.Serial(self.teensy_port[0], baudrate)
         self.signal = QtCore.SIGNAL("dataReady")
+        self.loadPIDDone = QtCore.SIGNAL("loadPidDone")
+
 
     def getTeensyPort(self):
         """Discover where is Teensy."""
         ports_avaiable = list(list_ports.comports())
         teensy_port = tuple()
         for port in ports_avaiable:
-            print(port)
             if port[1].startswith("Teensy") or port[0][:-1] == '/dev/ttyACM':
                 teensy_port = port
         if teensy_port:
             return teensy_port
 
     def close(self):
-
         if self.teensy.isOpen():
             self.teensy.close()
+    def savePID(self, gyro_parameters, angle_parameters):
+        gyro_pid = struct.pack("cxxxxxxxdddddddddddddddddddddddd",
+                Commands.USB_WRITE_GYRO_PID,
+                parameters[0:24]
+                )
+        gyro_data = cobs.encode(gyro_pid)
+        self.teensy.write(gyro_data)
+    def loadPID():
+        pass
+
+    def setup(self):
+        while(True):
+            teensy_port = self.getTeensyPort()
+            if(teensy_port):
+                self.teensy = serial.Serial(teensy_port[0], 115200)
+                break
+            else:
+                self.yieldCurrentThread()
 
 
     def run(self):
+        self.setup()
         packet_valid = False
         max_size = 255
         data_buf = b''
@@ -183,9 +211,6 @@ class TeensySerial(QThread):
         data = cobs.decode(data)
         command = int(data[0])
         if(command == self.Commands.USB_LOG_SENSOR.value):
-            #print(' '.join(hex(x) for x in data))
-            #a = sensorStruct.parse(data)
-            #print(a)
             self.emit(self.signal, sensorStruct.parse(data))
         elif(command == self.Commands.USB_LOG_STATS.value):
             print(statsStruct.parse(data).dt)
@@ -196,11 +221,11 @@ class TeensySerial(QThread):
 def main():
     app = QtGui.QApplication(sys.argv)
 
-    dataSerial = TeensySerial(115200)
-    form = TeensyGUI()
-    form.initialize(dataSerial)
+    dataSerial = TeensySerial()
+    gui = TeensyGUI()
+    gui.initialize(dataSerial)
     dataSerial.start()
-    form.show()
+    gui.show()
     app.exec_()
 
 

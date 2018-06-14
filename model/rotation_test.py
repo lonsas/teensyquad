@@ -15,7 +15,7 @@ omega_signal_disturbance_mean = [0, 0, 0]
 acc_signal_disturbance_std = 0.0 #m/s^2
 acc_signal_disturbance_mean = 0.0
 load_disturbance_std = np.array([0, 0.00, 0.00, 0.00])
-load_disturbance_mean0 = np.array([0, 0.0, 0, 0]) #Nm
+load_disturbance_mean0 = np.array([0, 0.0, 0.0, 0.0]) #Nm
 load_disturbance_mean1 = np.array([0, 0.0, 0, 0]) #Nm
 load_disturbance_t = 1 #s
 control_lag = int(control_lag_t/dt)
@@ -100,14 +100,16 @@ def teensyquad_update_loop(teensyquad, simquad):
 def run():
     simquad = QuadModel()
     teensyquad = TeensyQuad()
+    teensyquad.doIteration()
+    teensyquad.setAUX1(1)
     teensyquad.gotoArmed()
     if(teensyquad.getState() != TeensyQuadState.ARMED):
         print("Failed to arm, state is: {0}".format(teensyquad.getState()))
         return
     teensyquad.setThrottle(1)
     teensyquad.setRollStick(1)
-    #teensyquad.setPitchStick(0.5)
-    #teensyquad.setYawStick(-0.5)
+    teensyquad.setPitchStick(0.5)
+    teensyquad.setYawStick(-0.5)
 
     omega_log, FM_log, angle_log = teensyquad_update_loop(teensyquad, simquad)
     sim_time = np.linspace(0,len(omega_log)*dt,len(omega_log))

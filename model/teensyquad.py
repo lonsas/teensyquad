@@ -55,6 +55,11 @@ class TeensyQuad:
         a[0] = -a[1]
         a[1] = tmp
 
+        # The accelerometer will read the force opposing gravity
+        a[0] = -a[0]
+        a[1] = -a[1]
+        a[2] = -a[2]
+
         self.quad.setMotion6(int(a[0]), int(a[1]), int(a[2]), int(r[0]), int(r[1]), int(r[2]))
 
     def getMotors(self):
@@ -94,6 +99,9 @@ class TeensyQuad:
 
     def getState(self):
         return TeensyQuadState(int(self.quad.getCurrState()))
+
+    def setAUX1(self, value):
+        self.setCommand(QuadControl.AUX1, value)
 
     def getSensorAngle(self):
         roll = c_double()
