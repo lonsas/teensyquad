@@ -126,7 +126,7 @@ void SensorUpdate() {
     GyroScale(gyro);
     AccScale(acc);
 #ifdef MADGWICK
-    MadgwickAHRSupdateIMU(m_dbRollOmega, m_dbPitchOmega, m_dbYawOmega, acc[0], acc[1], acc[2]);
+    MadgwickAHRSupdateIMU(m_dbRollOmega, m_dbPitchOmega, m_dbYawOmega, acc[X], acc[Y], acc[Z]);
     MadgwickAHRSGetAngles(&m_dbRollAngle, &m_dbPitchAngle, &m_dbYawAngle);
 #else
     SensorAngleUpdate(m_dbRollOmega, m_dbPitchOmega, m_dbYawOmega, m_acceleration[X], m_acceleration[Y], m_acceleration[Z]);
