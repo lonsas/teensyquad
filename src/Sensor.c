@@ -4,6 +4,8 @@
 #include "MCUConf.h"
 #include <math.h>
 
+#define MADGWICK
+
 #define X 0
 #define Y 1
 #define Z 2
@@ -111,7 +113,7 @@ void SensorSetup() {
 
     mpu9150_initialize();
     SensorCalibrateZero();
-#if 0
+#ifdef MADGWICK
     MadgwickAHRSInit();
 #endif
 }
@@ -123,7 +125,7 @@ void SensorUpdate() {
 
     GyroScale(gyro);
     AccScale(acc);
-#if 0
+#ifdef MADGWICK
     MadgwickAHRSupdateIMU(m_dbRollOmega, m_dbPitchOmega, m_dbYawOmega, acc[0], acc[1], acc[2]);
     MadgwickAHRSGetAngles(&m_dbRollAngle, &m_dbPitchAngle, &m_dbYawAngle);
 #else
@@ -159,7 +161,7 @@ static void GyroScale(int16_t gyro[3])
 
 static void AccScale(int16_t acc[3])
 {
-    const double alpha = 0.01;
+    const double alpha = 1;
     for(int i = 0; i < 3; i++) {
         m_acceleration[i] = acc[i] * ACCEL_SCALE * alpha + m_acceleration[i] * (1 - alpha);
     }

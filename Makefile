@@ -18,6 +18,7 @@ OPTIONS = -DUSB_SERIAL -DLAYOUT_US_ENGLISH
 BUILDDIR = $(abspath $(CURDIR)/build)
 TESTBUILDDIR = $(abspath $(CURDIR)/build/tests)
 MODELBUILDDIR = $(abspath $(CURDIR)/build/model)
+HOSTBUILDDIR = $(abspath $(CURDIR)/build/host)
 
 #************************************************************************
 # Location of Teensyduino utilities, Toolchain, and Arduino Libraries.
@@ -110,11 +111,12 @@ LC_FILES := $(wildcard $(LIBRARYPATH)/*/*.c)
 LCPP_FILES := $(wildcard $(LIBRARYPATH)/*/*.cpp)
 TC_FILES := $(wildcard $(COREPATH)/*.c)
 TCPP_FILES := $(wildcard $(COREPATH)/*.cpp)
-C_FILES := $(wildcard src/*.c)
+SRC_C_FILES := $(wildcard src/*.c)
 CPP_FILES := $(wildcard src/*.cpp)
 INO_FILES := $(wildcard src/*.ino)
 TESTC_FILES := $(wildcard $(TESTPATH)/*.c)
 TESTCPP_FILES := $(wildcard $(TESTPATH)/*.cpp)
+HOST_C_FILES := $(wildcard host_src/*.c)
 
 
 # include paths for libraries
@@ -122,17 +124,16 @@ L_INC = -Isrc
 L_INC += -I$(LIBRARYPATH)
 L_INC += $(foreach lib,$(filter %/, $(wildcard $(LIBRARYPATH)/*/)), -I$(lib))
 
-SOURCES := $(C_FILES:.c=.o) $(CPP_FILES:.cpp=.o) $(INO_FILES:.ino=.o) $(TC_FILES:.c=.o) $(TCPP_FILES:.cpp=.o) $(LC_FILES:.c=.o) $(LCPP_FILES:.cpp=.o)
+SOURCES := $(SRC_C_FILES:.c=.o) $(CPP_FILES:.cpp=.o) $(INO_FILES:.ino=.o) $(TC_FILES:.c=.o) $(TCPP_FILES:.cpp=.o) $(LC_FILES:.c=.o) $(LCPP_FILES:.cpp=.o)
 OBJS := $(foreach src,$(SOURCES), $(BUILDDIR)/$(src))
 
-TESTABLESOURCES = src/PID.o src/GyroControl.o src/Sensor.o src/PIDConf.o src/mix.o src/QuadState.o src/Control.o src/AngleControl.o src/Receiver.o src/EscControl.o src/UsbCommunication.o src/COBS.o host_src/dummyHostFunctions.o src/MainLoop.o
-TESTABLEOBJS := $(foreach src,$(TESTABLESOURCES), $(TESTBUILDDIR)/$(src))
+
+HOSTSOURCES := $(filter-out src/main.o,$(SRC_C_FILES:.c=.o)) $(HOST_C_FILES:.c=.o) libraries/MadgwickAHRS/MadgwickAHRS.o
+
+MODELOBJS := $(foreach src,$(HOSTSOURCES), $(MODELBUILDDIR)/$(src))
 
 TESTSOURCES = $(TESTC_FILES:.c=.o)
-TESTOBJS := $(foreach src,$(TESTSOURCES), $(TESTBUILDDIR)/$(src))
-
-MODELSOURCES = src/PID.o src/GyroControl.o src/Sensor.o src/PIDConf.o src/mix.o src/QuadState.o src/Control.o src/AngleControl.o src/Receiver.o src/EscControl.o src/UsbCommunication.o src/COBS.o src/MainLoop.o host_src/dummyHostFunctions.o
-MODELOBJS := $(foreach src,$(MODELSOURCES), $(MODELBUILDDIR)/$(src))
+TESTOBJS := $(foreach src,$(TESTSOURCES), $(TESTBUILDDIR)/$(src)) $(foreach src,$(HOSTSOURCES), $(MODELBUILDDIR)/$(src))
 
 MODELLIBRARY := $(MODELBUILDDIR)/teensyquad.so
 
@@ -169,7 +170,9 @@ model: $(MODELLIBRARY)
 	@echo "done"
 
 $(MODELLIBRARY): $(MODELOBJS)
+	@mkdir -p "$(dir $@)"
 	$(CC) $(LDFLAGS) -o $@ $^
+
 test: CC = gcc
 test: CPPFLAGS = -Wall -g -fprofile-arcs -ftest-coverage
 test: CXXFLAGS = $(CPPFLAGS)
@@ -178,8 +181,8 @@ test: L_INC += -Itests -Ihost_src
 test: testbuild
 	$(TESTBUILDDIR)/test
 
-testbuild: $(TESTOBJS) $(TESTABLEOBJS)
-	$(CC) $(LDFLAGS) -o $(TESTBUILDDIR)/test $(TESTOBJS) $(TESTABLEOBJS)
+testbuild: $(TESTOBJS)
+	$(CC) $(LDFLAGS) -o $(TESTBUILDDIR)/test $(TESTOBJS)
 
 $(MODELBUILDDIR)/%.o: %.c
 	@mkdir -p "$(dir $@)"
