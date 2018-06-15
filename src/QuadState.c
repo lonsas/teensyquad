@@ -90,11 +90,7 @@ static void stateReadyWaitUpdate()
             TRANSITION(&stateArmed);
         }
     }
-    if(receiverSignalHigh(AUX1)) {
-        controlSetAngleMode(true);
-    } else {
-        controlSetAngleMode(false);
-    }
+
     /* Update */
     prevArmSignal = receiverSignalHigh(AUX2);
 }
@@ -118,7 +114,14 @@ static void stateArmedUpdate()
         TRANSITION(&stateReadyWait);
     }
 
+    if(receiverSignalHigh(AUX1)) {
+        controlSetAngleMode(true);
+    } else {
+        controlSetAngleMode(false);
+    }
+
     receiverFailSafe();
+
 }
 
 static void stateUsbConnected()
