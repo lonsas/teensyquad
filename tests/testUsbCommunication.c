@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "PIDConf.h"
+#include "MCUConf.h"
+#include "core_pins.h"
 
 static PidParameters dummyPidParameters = {
   .K = 1,
@@ -38,6 +40,7 @@ static size_t dummyUsbReceive(uint8_t * buffer)
 
 static void setup()
 {
+    pinArray[USB_VOLT_PIN] = HIGH;
     usbInputBuffer[0] = 0;
     memset(&usbInputBuffer[1], 0xFF, USB_DATA_MAX_SIZE-1);
     usbInputEndIdx = 1;

@@ -40,17 +40,19 @@ bool usbConnected()
 
 void usbUpdate()
 {
-    uint8_t commandBuf[USB_DATA_MAX_SIZE];
-    size_t length = 0;
-    while(usb_serial_available()) {
-        if(receiveData(commandBuf, &length)) {
-            commandDo(commandBuf, length);
-        }
-    }
-    if(m_sendLog) {
-        sendSensorLog();
-        sendStatsLog();
-        sendReceiverLog();
+    if(usbConnected()) {
+      uint8_t commandBuf[USB_DATA_MAX_SIZE];
+      size_t length = 0;
+      while(usb_serial_available()) {
+          if(receiveData(commandBuf, &length)) {
+              commandDo(commandBuf, length);
+          }
+      }
+      if(m_sendLog) {
+          sendSensorLog();
+          sendStatsLog();
+          sendReceiverLog();
+      }
     }
 }
 

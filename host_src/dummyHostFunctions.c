@@ -69,7 +69,7 @@ void analogWriteResolution(uint32_t bits)
 
 uint8_t digitalRead(uint8_t pin)
 {
-    return pinArray[pin] >= 5;
+    return pinArray[pin] >= 1;
 }
 
 /* EEPROM */

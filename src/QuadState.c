@@ -52,17 +52,13 @@ static void stateStartup()
 
     m_sensorActive = true;
     m_controlActive = false;
-    m_usbActive = false;
+    m_usbActive = true;
 
     entryDone(&stateStartupUpdate);
 }
 
 static void stateStartupUpdate()
 {
-    /* USB? */
-    if(usbConnected()) {
-        m_usbActive = true;
-    }
     /* Transition */
     if(SensorOk() && receiverOk()) {
         TRANSITION(&stateReadyWait);
