@@ -133,7 +133,7 @@ HOSTSOURCES := $(filter-out src/main.o,$(SRC_C_FILES:.c=.o)) $(HOST_C_FILES:.c=.
 MODELOBJS := $(foreach src,$(HOSTSOURCES), $(MODELBUILDDIR)/$(src))
 
 TESTSOURCES = $(TESTC_FILES:.c=.o)
-TESTOBJS := $(foreach src,$(TESTSOURCES), $(TESTBUILDDIR)/$(src)) $(foreach src,$(HOSTSOURCES), $(MODELBUILDDIR)/$(src))
+TESTOBJS := $(foreach src,$(TESTSOURCES), $(TESTBUILDDIR)/$(src)) $(foreach src,$(HOSTSOURCES), $(TESTBUILDDIR)/$(src))
 
 MODELLIBRARY := $(MODELBUILDDIR)/teensyquad.so
 
