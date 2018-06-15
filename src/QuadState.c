@@ -33,13 +33,11 @@ static void transition(void(*pfNextStateEntry)())
 static void stateStartup();
 static void stateReadyWait();
 static void stateArmed();
-static void stateUsbConnected();
 
 /* Update functions */
 static void stateStartupUpdate();
 static void stateReadyWaitUpdate();
 static void stateArmedUpdate();
-static void stateUsbConnectedUpdate();
 
 static void stateStartup()
 {
@@ -64,7 +62,6 @@ static void stateStartupUpdate()
     /* USB? */
     if(usbConnected()) {
         m_usbActive = true;
-        //TRANSITION(&stateUsbConnected);
     }
     /* Transition */
     if(SensorOk() && receiverOk()) {
@@ -120,23 +117,6 @@ static void stateArmedUpdate()
         controlSetAngleMode(false);
     }
 
-
-}
-
-static void stateUsbConnected()
-{
-    tCurrState = USB_CONNECTED;
-    m_usbActive = true;
-    entryDone(&stateUsbConnectedUpdate);
-}
-
-static void stateUsbConnectedUpdate()
-{
-    if(!usbConnected())
-    {
-        m_usbActive = false;
-        TRANSITION(&stateStartup);
-    }
 }
 
 enum state getCurrState()
