@@ -120,7 +120,6 @@ static void stateArmedUpdate()
         controlSetAngleMode(false);
     }
 
-    receiverFailSafe();
 
 }
 
@@ -164,6 +163,9 @@ void stateDo()
             usbUpdate();
         }
     }
+
+    receiverFailSafe();
+
     iteration++;
 }
 
