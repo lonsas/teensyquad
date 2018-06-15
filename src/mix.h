@@ -8,7 +8,7 @@
 
 #define THROTTLE_MAX 0.8
 
-void mix(double throttle, double dbBatVolt, double *pitch, double *roll, double *yaw, double *output);
+void mix(double throttle, double dbBatVolt, double *roll, double *pitch, double *yaw, double *output);
 
 
 #endif /* SRC_MIX_H_ */
