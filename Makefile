@@ -18,7 +18,6 @@ OPTIONS = -DUSB_SERIAL -DLAYOUT_US_ENGLISH
 BUILDDIR = $(abspath $(CURDIR)/build)
 TESTBUILDDIR = $(abspath $(CURDIR)/build/tests)
 MODELBUILDDIR = $(abspath $(CURDIR)/build/model)
-HOSTBUILDDIR = $(abspath $(CURDIR)/build/host)
 
 #************************************************************************
 # Location of Teensyduino utilities, Toolchain, and Arduino Libraries.
@@ -137,6 +136,8 @@ TESTOBJS := $(foreach src,$(TESTSOURCES), $(TESTBUILDDIR)/$(src)) $(foreach src,
 
 MODELLIBRARY := $(MODELBUILDDIR)/teensyquad.so
 
+TESTBINARY := $(TESTBUILDDIR)/test
+
 
 all: hex model test
 
@@ -178,11 +179,11 @@ test: CPPFLAGS = -Wall -g -fprofile-arcs -ftest-coverage
 test: CXXFLAGS = $(CPPFLAGS)
 test: LDFLAGS = -lcheck -lm -lgcov --coverage
 test: L_INC += -Itests -Ihost_src
-test: testbuild
+test: $(TESTBINARY)
 	$(TESTBUILDDIR)/test
 
-testbuild: $(TESTOBJS)
-	$(CC) $(LDFLAGS) -o $(TESTBUILDDIR)/test $(TESTOBJS)
+$(TESTBINARY): $(TESTOBJS)
+	$(CC) $(LDFLAGS) -o $@ $^
 
 $(MODELBUILDDIR)/%.o: %.c
 	@mkdir -p "$(dir $@)"
