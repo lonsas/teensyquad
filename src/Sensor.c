@@ -159,7 +159,7 @@ static void GyroScale(int16_t gyro[3])
 
 static void AccScale(int16_t acc[3])
 {
-    const double alpha = 0.1;
+    const double alpha = 0.01;
     for(int i = 0; i < 3; i++) {
         m_acceleration[i] = acc[i] * ACCEL_SCALE * alpha + m_acceleration[i] * (1 - alpha);
     }

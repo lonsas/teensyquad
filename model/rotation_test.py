@@ -10,10 +10,10 @@ sim_dt = dt/1
 control_lag_t = 0
 signal_lag_t = 0
 
-omega_signal_disturbance_std = [0.0, 0, 0] #rad/s
+omega_signal_disturbance_std = [0.1, 0.1, 0.1] #rad/s
 omega_signal_disturbance_mean = [0, 0, 0]
-acc_signal_disturbance_std = 0.0 #m/s^2
-acc_signal_disturbance_mean = 0.0
+acc_signal_disturbance_std = np.array([5.0, 5.0, 5.0]) #m/s^2
+acc_signal_disturbance_mean = np.array([0.0, 0.0, 0.0])
 load_disturbance_std = np.array([0, 0.00, 0.00, 0.00])
 load_disturbance_mean0 = np.array([0, 0.0, 0.0, 0.0]) #Nm
 load_disturbance_mean1 = np.array([0, 0.0, 0, 0]) #Nm
@@ -109,7 +109,7 @@ def run():
     teensyquad.setThrottle(1)
     teensyquad.setRollStick(1)
     teensyquad.setPitchStick(0.5)
-    teensyquad.setYawStick(-0.5)
+    #teensyquad.setYawStick(-0.5)
 
     omega_log, FM_log, angle_log = teensyquad_update_loop(teensyquad, simquad)
     sim_time = np.linspace(0,len(omega_log)*dt,len(omega_log))

@@ -24,7 +24,7 @@ static const PidParameters gyroYawDefaultPidParameters = {
 
 static const PidParameters angleDefaultPidParameters = {
   .K = 5,
-  .Ti = 0.25,
+  .Ti = 1,
   .Td = 0,
   .Tt = 0.2,
   .b = 1,
