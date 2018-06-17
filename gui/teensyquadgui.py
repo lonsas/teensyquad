@@ -29,6 +29,14 @@ receiverStruct = AlignedStruct(8, "command" / Int8ul,
                       "auxa" / Float64l,
                       "auxb" / Float64l);
 
+command_fmt8 = "cxxxxxxx"
+command_fmt4 = "cxxx"
+pid_fmt = command_fmt8 + "dddddddddddddddddddddddd"
+sensor_fmt = command_fmt8 + "dddddd"
+receiver_fmt = command_fmt8 + "dddddd"
+stats_fmt = command_fmt4 + "I"
+
+
 pyqtgraph.setConfigOption('background', 'w')
 pyqtgraph.setConfigOption('foreground', 'k')
 class TeensyGUI(QtGui.QMainWindow, design.Ui_MainWindow):
@@ -71,21 +79,67 @@ class TeensyGUI(QtGui.QMainWindow, design.Ui_MainWindow):
         self.timer.start(50)
 
     def savePID(self):
-        fields = [g_K.get(), g_Ti.get(), g_Td.get(), gy_K.get(), gy_Ti.get(), gy_Td.get(), a_K.get(), a_Ti.get(), a_Td.get()]
+        fields = [self.g_K.toPlainText(),
+                  self.g_Ti.toPlainText(),
+                  self.g_Td.toPlainText(),
+                  self.gy_K.toPlainText(),
+                  self.gy_Ti.toPlainText(),
+                  self.gy_Td.toPlainText(),
+                  self.a_K.toPlainText(),
+                  self.a_Ti.toPlainText(),
+                  self.a_Td.toPlainText()]
         field_data = [float(x) for x in fields]
 
-    def loadPID(self, gyro_pids, angle_pids):
-        self.gyro_pids = gyro_pids
-        self.angle_pids = angle_pids
-#        self.g_K.set(
+        # Gyro roll and pitch pid
+        self.gyro_pids[0] = gyro_pids[8] = field_data[0]
+        self.gyro_pids[1] = gyro_pids[9] = field_data[1]
+        self.gyro_pids[2] = gyro_pids[10] = field_data[2]
 
+        self.gyro_pids[16] = field_data[3]
+        self.gyro_pids[17] = field_data[4]
+        self.gyro_pids[18] = field_data[5]
+
+        # Angle pids
+        self.angle_pids[0] = angle_pids[8] = angle_pids[16] =  field_data[6]
+        self.angle_pids[1] = angle_pids[9] = angle_pids[17] = field_data[7]
+        self.angle_pids[2] = angle_pids[10] = angle_pids[18] = field_data[8]
+
+        dataserial.savePID(self.gyro_pids, self.angle_pids)
+
+    def loadAnglePID(self, angle_pids):
+        self.angle_pids = angle_pids
+
+        self.a_K.set(angle_pids[0])
+        self.a_Ti.set(angle_pids[1])
+        self.a_Td.set(angle_pids[2])
+
+    def loadGyroPID(self, gyro_pids):
+        self.gyro_pids = gyro_pids
+
+        self.g_K.set(gyro_pids[0])
+        self.g_Ti.set(gyro_pids[1])
+        self.g_Td.set(gyro_pids[2])
+
+        self.gy_K.set(gyro_pids[16])
+        self.gy_Ti.set(gyro_pids[17])
+        self.gy_Td.set(gyro_pids[18])
+
+    def showDt(self, dt):
+        self.sampleTimeLabel.setText(dt)
 
     def initialize(self, dataserial):
+        # Serial events
         self.dataserial = dataserial
-        self.connect(dataserial, dataserial.signal, self.updateData)
-        self.connect(self.saveButton, QtCore.SIGNAL("clicked()"), dataserial.savePID)
+        self.connect(dataserial, dataserial.log_signal, self.updateData)
+        self.connect(dataserial, dataserial.load_gyro_pid_done, self.loadGyroPID)
+        self.connect(dataserial, dataserial.load_angle_pid_done, self.loadAnglePID)
+        self.connect(dataserial, dataserial.dt_signal, self.showDt)
+
+        # Gui events
+        self.connect(self.saveButton, QtCore.SIGNAL("clicked()"), self.savePID)
         self.connect(self.loadButton, QtCore.SIGNAL("clicked()"), dataserial.loadPID)
-        self.connect(dataserial, dataserial.loadPIDDone, self.loadPID)
+
+
 
     def updateData(self, data):
         self.accx.append(data.accx)
@@ -143,8 +197,9 @@ class TeensySerial(QThread):
 
     def __init__(self):
         QThread.__init__(self)
-        self.signal = QtCore.SIGNAL("dataReady")
-        self.loadPIDDone = QtCore.SIGNAL("loadPidDone")
+        self.log_signal = QtCore.SIGNAL("log_data_ready")
+        self.load_gyro_pid_done = QtCore.SIGNAL("load_gyro_pid_done")
+        self.load_angle_pid_done = QtCore.SIGNAL("load_angle_pid_done")
 
 
     def getTeensyPort(self):
@@ -160,15 +215,24 @@ class TeensySerial(QThread):
     def close(self):
         if self.teensy.isOpen():
             self.teensy.close()
+
     def savePID(self, gyro_parameters, angle_parameters):
-        gyro_pid = struct.pack("cxxxxxxxdddddddddddddddddddddddd",
-                Commands.USB_WRITE_GYRO_PID,
-                parameters[0:24]
+        angle_pid = struct.pack(pid_fmt,
+                Commands.USB_WRITE_ANGLE_PID_PID,
+                gyro_parameters[0:24]
                 )
+        gyro_pid = struct.pack(pid_fmt,
+                Commands.USB_WRITE_GYRO_PID,
+                angle_parameters[0:24]
+                )
+        angle_data = cobs.encode(angle_pid)
         gyro_data = cobs.encode(gyro_pid)
+        self.teensy.write(angle_data)
         self.teensy.write(gyro_data)
+
     def loadPID():
-        pass
+        self.teensy.write(cobs.encode(Commands.USB_READ_GYRO_PID))
+        self.teensy.write(cobs.encode(Commands.USB_READ_ANGLE_PID))
 
     def setup(self):
         while(True):
@@ -211,11 +275,17 @@ class TeensySerial(QThread):
         data = cobs.decode(data)
         command = int(data[0])
         if(command == self.Commands.USB_LOG_SENSOR.value):
-            self.emit(self.signal, sensorStruct.parse(data))
+            self.emit(self.log_signal, sensorStruct.parse(data))
         elif(command == self.Commands.USB_LOG_STATS.value):
-            print(statsStruct.parse(data).dt)
+            self.emit(self.dt_signal, unpack(stat_fmt, data)[1])
         elif(command == self.Commands.USB_LOG_RECEIVER.value):
             print(receiverStruct.parse(data).auxb)
+        elif(command == self.Commands.USB_READ_GYRO_PID):
+            parameters = struct.unpack(pid_fmt, data)[1:]
+            self.emit(self.load_gyro_pid_done, parameters)
+        elif(command == self.Commands.USB_READ_ANGLE_PID):
+            parameters = struct.unpack(pid_fmt, data)[1:]
+            self.emit(self.load_angle_pid_done, parameters)
 
 
 def main():
