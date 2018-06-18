@@ -8,6 +8,8 @@
 #include "PIDConf.h"
 #include "UsbCommunication.h"
 
+#define USE_EEPROM 1
+
 #define TRANSITION(state) do { transition(state); return; } while(0)
 
 /* Module local variables */
@@ -44,8 +46,11 @@ static void stateStartup()
     tCurrState = STARTUP;
     receiverSetup();
     usbSetup();
-    /*PIDConfLoad(); */
-    PIDConfSetDefault();
+    if(USE_EEPROM) {
+        PIDConfLoad();
+    } else {
+        PIDConfSetDefault();
+    }
     controlSetup();
     SensorSetup();
     EscControlSetup();
