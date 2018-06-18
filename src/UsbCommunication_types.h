@@ -18,7 +18,7 @@
 #define USB_LOG_STATS 8
 #define USB_LOG_RECEIVER 9
 
-typedef uint8_t Command;
+typedef uint32_t Command;
 
 struct UsbLogPacket {
     Command command;

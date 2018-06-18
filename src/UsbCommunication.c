@@ -16,6 +16,7 @@ static bool m_correctData;
 static bool m_sendLog;
 
 
+static void sendCommand(Command command);
 static void sendPacket(void * data, size_t length);
 static void sendSensorLog();
 static void sendStatsLog();
@@ -58,8 +59,9 @@ void usbUpdate()
 
 static void commandDo(void * commandBuf, size_t length)
 {
-    Command * command = commandBuf;
-    switch(command[0]) {
+    Command command;
+    memcpy(&command, commandBuf, sizeof(command));
+    switch(command) {
         case(USB_LOG_START):
             m_sendLog = true;
             break;
@@ -70,14 +72,14 @@ static void commandDo(void * commandBuf, size_t length)
             if(length == sizeof(struct UsbPidPacket)) {
                 receiveGyroPidParameters(commandBuf);
             } else {
-                sendPacket(USB_INVALID, sizeof(command));
+                sendCommand(USB_INVALID);
             }
             break;
         case(USB_WRITE_ANGLE_PID):
             if(length == sizeof(struct UsbPidPacket)) {
                 receiveAnglePidParameters(commandBuf);
             } else {
-                sendPacket(USB_INVALID, sizeof(command));
+                sendCommand(USB_INVALID);
             }
             break;
         case(USB_READ_GYRO_PID):
@@ -87,10 +89,14 @@ static void commandDo(void * commandBuf, size_t length)
             sendAnglePidParameters();
             break;
         default:
-            sendPacket(USB_INVALID, sizeof(command));
+            sendCommand(USB_INVALID);
             break;
     }
 
+}
+static void sendCommand(Command command)
+{
+    sendPacket(&command, sizeof(command));
 }
 static void sendPacket(void * data, size_t length)
 {
@@ -152,8 +158,10 @@ static bool receiveData(void * commandBuf, size_t * commandLength)
                 return false;
             }
             if(data == 0) {
-                m_correctData = true;
-                break;
+                if(usb_serial_peekchar() != 0) {
+                    m_correctData = true;
+                    break;
+                }
             }
         }
     }
@@ -173,6 +181,10 @@ static bool receiveData(void * commandBuf, size_t * commandLength)
     }
 
     *commandLength = UnStuffData(dataBuf, count, commandBuf);
+    if(*commandLength < sizeof(Command)) {
+        return false;
+    }
+
     return true;
 }
 
