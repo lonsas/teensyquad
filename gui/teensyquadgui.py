@@ -200,6 +200,7 @@ class TeensySerial(QThread):
         self.log_signal = QtCore.SIGNAL("log_data_ready")
         self.load_gyro_pid_done = QtCore.SIGNAL("load_gyro_pid_done")
         self.load_angle_pid_done = QtCore.SIGNAL("load_angle_pid_done")
+        self.dt_signal = QtCore.SIGNAL("dt_signal")
 
 
     def getTeensyPort(self):
