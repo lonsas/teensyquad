@@ -4,6 +4,7 @@
 #include "MCUConf.h"
 #include "eeprom.h"
 
+
 static const PidParameters gyroDefaultPidParameters = {
   .K = 2,
   .Ti = 0.1,
@@ -22,6 +23,7 @@ static const PidParameters gyroYawDefaultPidParameters = {
   .h = 0.001,
 };
 
+/* TODO: A bit unstable in angle mode with disturbances */
 static const PidParameters angleDefaultPidParameters = {
   .K = 5,
   .Ti = 1,

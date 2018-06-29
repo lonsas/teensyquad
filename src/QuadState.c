@@ -46,12 +46,14 @@ static void stateStartup()
     tCurrState = STARTUP;
     receiverSetup();
     usbSetup();
+    /* TODO: Setup so it can be used in host simulations also */
     if(USE_EEPROM) {
         PIDConfLoad();
     } else {
         PIDConfSetDefault();
     }
     controlSetup();
+    /* TODO: Sensor setup relies on the quad being still */
     SensorSetup();
     EscControlSetup();
 

@@ -97,6 +97,7 @@ bool receiverOk()
 
 void receiverFailSafe()
 {
+    /* TODO: Time based time out to avoid disarm */
     static int32_t prevAux1 = SIGNAL_MIN;
     if(receiverOk()) {
         prevAux1 = width[AUX1];

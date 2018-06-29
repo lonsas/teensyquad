@@ -10,6 +10,7 @@
 #define PI 3.1415
 #endif
 
+/* TODO: MAX_ANGLE needs to be higher */
 #define MAX_ANGLE PI*0.25
 #define MAX_OMEGA PI*2
 #define ROLL_GAIN 5
