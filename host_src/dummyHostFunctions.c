@@ -117,6 +117,15 @@ int usb_serial_write(const void *buffer, uint32_t size)
     return size;
 }
 
+int usb_serial_peekchar()
+{
+    if(usbInputCurrIdx < usbInputEndIdx) {
+        return usbInputBuffer[(usbInputCurrIdx) % USB_BUFFER_SIZE];
+    } else {
+        return -1;
+    }
+}
+
 /* Model stuff */
 
 void setMotion6(int ax, int ay, int az, int gx, int gy, int gz)
