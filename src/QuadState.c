@@ -8,7 +8,7 @@
 #include "PIDConf.h"
 #include "UsbCommunication.h"
 
-#define USE_EEPROM 1
+#define USE_EEPROM 0
 
 #define TRANSITION(state) do { transition(state); return; } while(0)
 
